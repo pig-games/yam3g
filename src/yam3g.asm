@@ -155,21 +155,18 @@ setLUT0_4_Tiles2
 
                 ; generate random tiles for map 1
         .block
-                lda #$99
+                lda #$1
                 sta rnd.seed 
                 sta rnd.seed+1 
                 sta rnd.seed+2
-                lda #<PlayField
+                lda #<PlayFieldEnd-2
                 sta PlayFieldAddr
-                lda #>PlayField
+                lda #>PlayFieldEnd
                 sta PlayFieldAddr+1
 
-                ldx #8
-        rowLoop
-                ldy #16
-        colLoop
-                dey
-                dey                ; pre decrease to work from 15 => 0
+                ldx #128
+        loop
+                ; get random number
                 phy
                 jsr rnd.galois24o
                 ply                
@@ -178,56 +175,50 @@ setLUT0_4_Tiles2
                 lsr a
                 lsr a
                 lsr a
-                sta (PlayFieldAddr),y
-                ; jmp endMatching
-                phy
-                cpy #16
-                beq noMatching
-                ; check for horizontal match
-                iny
-                iny                          ; y + 2
-                cmp (PlayFieldAddr),y        ; previous column
-                bne noMatching
-                iny                          ; y + 3
-                lda (PlayFieldAddr),y        ; previous column match number
-                ply
-                cmp #1
-                bne incColumnMatches
-                lda (PlayFieldAddr),y                
-                inc a
-                and #7
-                sta (PlayFieldAddr),y
-                phy
-                iny
+                ; store in current gem position
+                sta (PlayFieldAddr)
+                ; check for right most position, no gem to check to the right...
+                txa
+                and #$F
+                beq noMatch
+                ; restore gem number and check for match with gem to the right
+                ldy #2
+                lda (PlayFieldAddr)
+                cmp (PlayFieldAddr),y
+                bne noMatch
+                ; check for match amount for gem to the right
+                ldy #3
+                lda (PlayFieldAddr),y
+                beq incHorizontalMatchAmount
+                ; we have a matching gem pair to the right so we increase the current gem number
+                lda (PlayFieldAddr)
+                inc a                         ; increase gem number to no long match
+                and #7                        ; roll-over if needed
+                sta (PlayFieldAddr)           ; store new gem value
+                ; set current gem match amount to 0
                 lda #0
+                ldy #1
                 sta (PlayFieldAddr),y
-                ply
                 bra endMatching
-        incColumnMatches
-                phy
-                iny
-                inc a
-                sta (PlayFieldAddr),y        ; store match number
-                iny
-                iny
-                sta (PlayFieldAddr),y        ; store previous column match number
-                ply
-                bra endMatching
-        noMatching
-                ply
-                ; set number of matches for current column
+        incHorizontalMatchAmount
+                ; our match with the right neighbour is isolated, so we set both match gem's amounts to 1
+                lda #1
+                ldy #1
+                sta (PlayFieldAddr),y
+                ldy #3
+                sta (PlayFieldAddr),y
+                bra endMatching                
+        noMatch
+                ; no match we set the current gem's match amount to 0
                 lda #0
-                iny
-                sta (PlayFieldAddr),y
-                dey
+                ldy #1
+                sta (PlayfieldAddr),y
         endMatching
-                bne colLoop
-                clc
-                lda PlayFieldAddr
-                adc #16
-                sta PlayFieldAddr
+                ; we're done matching let's do next gem
+                dec PlayFieldAddr
+                dec PlayFieldAddr
                 dex
-                bne rowLoop
+                bne loop
         .bend
 
         .block
@@ -281,6 +272,7 @@ PlayFieldAddr   .fill 2
                 .section data
         .align $100
 PlayField       .fill 128,0
+PlayFieldEnd
                 .send
 InterruptHandlerJoystick:
 
