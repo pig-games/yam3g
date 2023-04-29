@@ -110,6 +110,38 @@ SPI_DATA_REG     = $DD01    ;  SPI Tx and Rx - Wait for BUSY to == 0 before read
 .send
 
 .section system
+editMMU	.macro
+		lda #$80
+		sta $00
+	.endmacro
+
+releaseMMU .macro
+		stz $00
+	.endmacro
+
+pushMMU	.macro slot
+		lda $08+$\slot
+		pha
+	.endmacro
+
+popMMU	.macro slot
+		pla
+		sta $08+$\slot
+	.endmacro
+
+setMMU	.macro slot, bank
+		#system.editMMU
+		#system.pushMMU \slot
+                lda #\bank
+                sta $08+$\slot
+		#system.releaseMMU
+	.endmacro
+		
+resetMMU .macro slot
+		#system.editMMU
+		#system.popMMU \slot
+		#system.releaseMMU
+	.endmacro
 
 setIOPage0		
 		

@@ -68,7 +68,7 @@ setLUT0_4_Tiles2
                 lda TileMapPalette+$100,x
                 sta vky.LUT0+$100,x
                 inx
-                cpx #$FC
+                cpx #$F0
                 bne setLUT0_4_Tiles2
                 
                 ; Go in Page 0 to program the rest
@@ -154,18 +154,90 @@ setLUT0_4_Tiles2
                 sta vky.tile.T2_CONTROL_REG  ; Enable Layer2
 
                 ; generate random tiles for map 1
-                ; setup mmu for tile map access
-                lda #$80
-                sta $00
-                lda $09 ; push old mmu value
-                pha
-                lda #8        ; set mmu to $10000
-                sta $09
-                stz $00
-                lda #$81
+        .block
+                lda #$99
                 sta rnd.seed 
                 sta rnd.seed+1 
-                sta rnd.seed+2 
+                sta rnd.seed+2
+                lda #<PlayField
+                sta PlayFieldAddr
+                lda #>PlayField
+                sta PlayFieldAddr+1
+
+                ldx #8
+        rowLoop
+                ldy #16
+        colLoop
+                phy
+                jsr rnd.galois24o
+                ply                
+                lsr a
+                lsr a
+                lsr a
+                lsr a
+                lsr a
+                sta (PlayFieldAddr),y
+                ; jmp endMatching
+                phy
+                cpy #16
+                beq noMatching
+                ; check for horizontal match
+                iny
+                iny                          ; y + 2
+                cmp (PlayFieldAddr),y        ; previous column
+                bne noMatching
+                iny                          ; y + 3
+                lda (PlayFieldAddr),y        ; previous column match number
+                ply
+                cmp #1
+                bne incColumnMatches
+                lda (PlayFieldAddr),y                
+                inc a
+                and #7
+                sta (PlayFieldAddr),y
+                phy
+                iny
+                lda #0
+                sta (PlayFieldAddr),y
+                ply
+                bra endMatching
+        incColumnMatches
+                phy
+                iny
+                inc a
+                sta (PlayFieldAddr),y        ; store match number
+                iny
+                iny
+                sta (PlayFieldAddr),y        ; store previous column match number
+                ply
+                bra endMatching
+        noMatching
+                ply
+                ; set number of matches for current column
+                lda #0
+                iny
+                sta (PlayFieldAddr),y
+                dey
+        endMatching
+                dey
+                dey
+                bne colLoop
+                clc
+                lda PlayFieldAddr
+                adc #16
+                sta PlayFieldAddr
+                dex
+                bne rowLoop
+        .bend
+
+        .block
+                ; Create tilemap for PlayField                
+                ; setup mmu for tile map access
+                #system.setMMU 1, 8
+                lda #<PlayField
+                sta PlayFieldAddr
+                lda #>PlayField
+                sta PlayFieldAddr+1
                 lda #(8*TileMapXSize)+12
                 sta TileAddr
                 lda #$25
@@ -177,20 +249,16 @@ setLUT0_4_Tiles2
         colLoop
                 lda #0
                 sta (TileAddr+1),y
-                phy
-                jsr rnd.galois24o
-                ply                
-                lsr a
-                lsr a
-                lsr a
-                lsr a
-                lsr a
-                clc
-                adc #16
+                lda (PlayFieldAddr),y
+                adc #80
                 sta (TileAddr),y
                 dey
                 dey
                 bne colLoop
+                clc
+                lda PlayFieldAddr
+                adc #16
+                sta PlayFieldAddr
                 clc
                 lda TileAddr
                 adc #42
@@ -200,20 +268,18 @@ setLUT0_4_Tiles2
                 sta TileAddr+1
                 dex
                 bne rowLoop
-
-                ; restore mmu
-                lda #$80
-                sta $00
-                pla
-                sta $09
-                stz $00
-                
+                #system.resetMMU 1
+        .bend
                 rts
 
                 .section dp
 TileAddr        .fill 2
+PlayFieldAddr   .fill 2
                 .send
-
+                .section data
+        .align $100
+PlayField       .fill 130,0
+                .send
 InterruptHandlerJoystick:
 
                 ; Clear Interrupt Pending Register for SOF
