@@ -168,6 +168,8 @@ setLUT0_4_Tiles2
         rowLoop
                 ldy #16
         colLoop
+                dey
+                dey                ; pre decrease to work from 15 => 0
                 phy
                 jsr rnd.galois24o
                 ply                
@@ -219,8 +221,6 @@ setLUT0_4_Tiles2
                 sta (PlayFieldAddr),y
                 dey
         endMatching
-                dey
-                dey
                 bne colLoop
                 clc
                 lda PlayFieldAddr
@@ -238,27 +238,29 @@ setLUT0_4_Tiles2
                 sta PlayFieldAddr
                 lda #>PlayField
                 sta PlayFieldAddr+1
-                lda #(8*TileMapXSize)+12
+                lda #(8*TileMapXSize)+14
                 sta TileAddr
                 lda #$25
                 sta TileAddr+1
 
                 ldx #8
         rowLoop
-                ldy #16
+                ldy #0
         colLoop
-                lda #0
-                sta (TileAddr+1),y
-                lda (PlayFieldAddr),y
+                lda (PlayFieldAddr)
+                clc
                 adc #80
                 sta (TileAddr),y
+                lda #0
+                iny
+                sta (TileAddr),y
                 dey
-                dey
+                inc PlayFieldAddr
+                inc PlayFieldAddr
+                iny
+                iny
+                cpy #16
                 bne colLoop
-                clc
-                lda PlayFieldAddr
-                adc #16
-                sta PlayFieldAddr
                 clc
                 lda TileAddr
                 adc #42
@@ -278,7 +280,7 @@ PlayFieldAddr   .fill 2
                 .send
                 .section data
         .align $100
-PlayField       .fill 130,0
+PlayField       .fill 128,0
                 .send
 InterruptHandlerJoystick:
 

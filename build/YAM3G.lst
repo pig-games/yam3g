@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.58.2974? listing file
 ; 64tass --long-address -b -fc -o build/YAM3G.bin --list build/YAM3G.lst --labels=build/YAM3G.lbl src/main.asm src/init.asm src/system.asm src/yam3g.asm src/rnd.asm src/display.asm src/audio.asm src/defs/interrupt.asm src/defs/tinyvicky.asm src/defs/io.asm src/textencoding.asm
-; Sat Apr 29 11:22:21 2023
+; Sat Apr 29 13:38:48 2023
 
 ;Offset	;PC	;Hex		;Monitor	;Source
 
@@ -319,7 +319,7 @@
 .fe01		da		phx		                phx
 .fe02		5a		phy		                phy
 .fe03		08		php		                php
-.fe04		20 7f f1	jsr $f17f	                jsr yam3g.InterruptHandlerJoystick
+.fe04		20 81 f1	jsr $f181	                jsr yam3g.InterruptHandlerJoystick
 .fe07		28		plp		                plp
 .fe08		7a		ply		                ply
 .fe09		fa		plx		                plx
@@ -4244,56 +4244,56 @@
 .f0dd						        rowLoop
 .f0dd		a0 10		ldy #$10	                ldy #16
 .f0df						        colLoop
-.f0df		5a		phy		                phy
-.f0e0		20 36 f2	jsr $f236	                jsr rnd.galois24o
-.f0e3		7a		ply		                ply
-.f0e4		4a		lsr a		                lsr a
-.f0e5		4a		lsr a		                lsr a
+.f0df		88		dey		                dey
+.f0e0		88		dey		                dey                ; pre decrease to work from 15 => 0
+.f0e1		5a		phy		                phy
+.f0e2		20 38 f2	jsr $f238	                jsr rnd.galois24o
+.f0e5		7a		ply		                ply
 .f0e6		4a		lsr a		                lsr a
 .f0e7		4a		lsr a		                lsr a
 .f0e8		4a		lsr a		                lsr a
-.f0e9		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f0eb		5a		phy		                phy
-.f0ec		c0 10		cpy #$10	                cpy #16
-.f0ee		f0 2a		beq $f11a	                beq noMatching
-.f0f0		c8		iny		                iny
-.f0f1		c8		iny		                iny                          ; y + 2
-.f0f2		d1 0d		cmp ($0d),y	                cmp (PlayFieldAddr),y        ; previous column
-.f0f4		d0 24		bne $f11a	                bne noMatching
-.f0f6		c8		iny		                iny                          ; y + 3
-.f0f7		b1 0d		lda ($0d),y	                lda (PlayFieldAddr),y        ; previous column match number
-.f0f9		7a		ply		                ply
-.f0fa		c9 01		cmp #$01	                cmp #1
-.f0fc		d0 10		bne $f10e	                bne incColumnMatches
-.f0fe		b1 0d		lda ($0d),y	                lda (PlayFieldAddr),y
-.f100		1a		inc a		                inc a
-.f101		29 07		and #$07	                and #7
-.f103		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f105		5a		phy		                phy
-.f106		c8		iny		                iny
-.f107		a9 00		lda #$00	                lda #0
-.f109		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f10b		7a		ply		                ply
-.f10c		80 13		bra $f121	                bra endMatching
-.f10e						        incColumnMatches
-.f10e		5a		phy		                phy
-.f10f		c8		iny		                iny
-.f110		1a		inc a		                inc a
-.f111		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y        ; store match number
-.f113		c8		iny		                iny
-.f114		c8		iny		                iny
-.f115		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y        ; store previous column match number
-.f117		7a		ply		                ply
-.f118		80 07		bra $f121	                bra endMatching
-.f11a						        noMatching
-.f11a		7a		ply		                ply
-.f11b		a9 00		lda #$00	                lda #0
-.f11d		c8		iny		                iny
-.f11e		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f120		88		dey		                dey
-.f121						        endMatching
-.f121		88		dey		                dey
+.f0e9		4a		lsr a		                lsr a
+.f0ea		4a		lsr a		                lsr a
+.f0eb		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
+.f0ed		5a		phy		                phy
+.f0ee		c0 10		cpy #$10	                cpy #16
+.f0f0		f0 2a		beq $f11c	                beq noMatching
+.f0f2		c8		iny		                iny
+.f0f3		c8		iny		                iny                          ; y + 2
+.f0f4		d1 0d		cmp ($0d),y	                cmp (PlayFieldAddr),y        ; previous column
+.f0f6		d0 24		bne $f11c	                bne noMatching
+.f0f8		c8		iny		                iny                          ; y + 3
+.f0f9		b1 0d		lda ($0d),y	                lda (PlayFieldAddr),y        ; previous column match number
+.f0fb		7a		ply		                ply
+.f0fc		c9 01		cmp #$01	                cmp #1
+.f0fe		d0 10		bne $f110	                bne incColumnMatches
+.f100		b1 0d		lda ($0d),y	                lda (PlayFieldAddr),y
+.f102		1a		inc a		                inc a
+.f103		29 07		and #$07	                and #7
+.f105		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
+.f107		5a		phy		                phy
+.f108		c8		iny		                iny
+.f109		a9 00		lda #$00	                lda #0
+.f10b		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
+.f10d		7a		ply		                ply
+.f10e		80 13		bra $f123	                bra endMatching
+.f110						        incColumnMatches
+.f110		5a		phy		                phy
+.f111		c8		iny		                iny
+.f112		1a		inc a		                inc a
+.f113		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y        ; store match number
+.f115		c8		iny		                iny
+.f116		c8		iny		                iny
+.f117		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y        ; store previous column match number
+.f119		7a		ply		                ply
+.f11a		80 07		bra $f123	                bra endMatching
+.f11c						        noMatching
+.f11c		7a		ply		                ply
+.f11d		a9 00		lda #$00	                lda #0
+.f11f		c8		iny		                iny
+.f120		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
 .f122		88		dey		                dey
+.f123						        endMatching
 .f123		d0 ba		bne $f0df	                bne colLoop
 .f125		18		clc		                clc
 .f126		a5 0d		lda $0d		                lda PlayFieldAddr
@@ -4312,174 +4312,176 @@
 .f13e		85 0d		sta $0d		                sta PlayFieldAddr
 .f140		a9 e8		lda #$e8	                lda #>PlayField
 .f142		85 0e		sta $0e		                sta PlayFieldAddr+1
-.f144		a9 b4		lda #$b4	                lda #(8*TileMapXSize)+12
+.f144		a9 b6		lda #$b6	                lda #(8*TileMapXSize)+14
 .f146		85 0b		sta $0b		                sta TileAddr
 .f148		a9 25		lda #$25	                lda #$25
 .f14a		85 0c		sta $0c		                sta TileAddr+1
 .f14c		a2 08		ldx #$08	                ldx #8
 .f14e						        rowLoop
-.f14e		a0 10		ldy #$10	                ldy #16
+.f14e		a0 00		ldy #$00	                ldy #0
 .f150						        colLoop
-.f150		a9 00		lda #$00	                lda #0
-.f152		91 0c		sta ($0c),y	                sta (TileAddr+1),y
-.f154		b1 0d		lda ($0d),y	                lda (PlayFieldAddr),y
-.f156		69 50		adc #$50	                adc #80
-.f158		91 0b		sta ($0b),y	                sta (TileAddr),y
-.f15a		88		dey		                dey
-.f15b		88		dey		                dey
-.f15c		d0 f2		bne $f150	                bne colLoop
-.f15e		18		clc		                clc
-.f15f		a5 0d		lda $0d		                lda PlayFieldAddr
-.f161		69 10		adc #$10	                adc #16
-.f163		85 0d		sta $0d		                sta PlayFieldAddr
-.f165		18		clc		                clc
-.f166		a5 0b		lda $0b		                lda TileAddr
-.f168		69 2a		adc #$2a	                adc #42
-.f16a		85 0b		sta $0b		                sta TileAddr
-.f16c		a5 0c		lda $0c		                lda TileAddr+1
-.f16e		69 00		adc #$00	                adc #0
-.f170		85 0c		sta $0c		                sta TileAddr+1
-.f172		ca		dex		                dex
-.f173		d0 d9		bne $f14e	                bne rowLoop
-.f175		a9 80		lda #$80			lda #$80
-.f177		85 00		sta $00				sta $00
-.f179		68		pla				pla
-.f17a		85 09		sta $09				sta $08+$1
-.f17c		64 00		stz $00				stz $00
-.f17e		60		rts		                rts
+.f150		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
+.f152		18		clc		                clc
+.f153		69 50		adc #$50	                adc #80
+.f155		91 0b		sta ($0b),y	                sta (TileAddr),y
+.f157		a9 00		lda #$00	                lda #0
+.f159		c8		iny		                iny
+.f15a		91 0b		sta ($0b),y	                sta (TileAddr),y
+.f15c		88		dey		                dey
+.f15d		e6 0d		inc $0d		                inc PlayFieldAddr
+.f15f		e6 0d		inc $0d		                inc PlayFieldAddr
+.f161		c8		iny		                iny
+.f162		c8		iny		                iny
+.f163		c0 10		cpy #$10	                cpy #16
+.f165		d0 e9		bne $f150	                bne colLoop
+.f167		18		clc		                clc
+.f168		a5 0b		lda $0b		                lda TileAddr
+.f16a		69 2a		adc #$2a	                adc #42
+.f16c		85 0b		sta $0b		                sta TileAddr
+.f16e		a5 0c		lda $0c		                lda TileAddr+1
+.f170		69 00		adc #$00	                adc #0
+.f172		85 0c		sta $0c		                sta TileAddr+1
+.f174		ca		dex		                dex
+.f175		d0 d7		bne $f14e	                bne rowLoop
+.f177		a9 80		lda #$80			lda #$80
+.f179		85 00		sta $00				sta $00
+.f17b		68		pla				pla
+.f17c		85 09		sta $09				sta $08+$1
+.f17e		64 00		stz $00				stz $00
+.f180		60		rts		                rts
 >000b						TileAddr        .fill 2
 >000d						PlayFieldAddr   .fill 2
 >e800						        .align $100
->e800		00 00 00 00 00 00 00 00		PlayField       .fill 130,0
+>e800		00 00 00 00 00 00 00 00		PlayField       .fill 128,0
 >e808		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 ;		...repeated 6 times (96 bytes)...
->e878		00 00 00 00 00 00 00 00 00 00
-.f17f						InterruptHandlerJoystick:
-.f17f		a9 01		lda #$01	                lda #interrupt.JR0_INT00_SOF
-.f181		2c 60 d6	bit $d660	                bit interrupt.PENDING_REG0
-.f184		f0 13		beq $f199	                beq +
-.f186		8d 60 d6	sta $d660	                sta interrupt.PENDING_REG0
-.f189		20 03 10	jsr $1003	                jsr musicPlay
-.f18c		ad 00 dc	lda $dc00	                lda io.joy.VIA0_IRB    ; Read VIA Port B to get Joystick Value
-.f18f		29 1f		and #$1f	                and #$1F        ; Remove Unwanted bits
-.f191		c9 1f		cmp #$1f	                cmp #$1F        ; Any movement at all?
-.f193		d0 05		bne $f19a	                bne joystickNotDone
-.f195		a9 00		lda #$00	                lda #$00
-.f197		85 50		sta $50		                sta io.joy.CNT_0
-.f199						        +
-.f199		60		rts		                rts
-.f19a						joystickNotDone
-.f19a		ea		nop		                nop
-.f19b						joystickDoneNow
-.f19b		ad 00 dc	lda $dc00	                lda io.joy.VIA0_IRB
-.f19e		85 52		sta $52		                sta io.joy.VAL
-.f1a0		29 04		and #$04	                and #$04              ; Check what value is cleared
-.f1a2		c9 00		cmp #$00	                cmp #$00
-.f1a4		f0 15		beq $f1bb	                beq forwardX
-.f1a6		a5 52		lda $52		                lda io.joy.VAL
-.f1a8		29 08		and #$08	                and #$08
-.f1aa		c9 00		cmp #$00	                cmp #$00
-.f1ac		f0 42		beq $f1f0	                beq backwardX
-.f1ae		a5 52		lda $52		                lda io.joy.VAL
-.f1b0		29 01		and #$01	                and #$01
-.f1b2		c9 00		cmp #$00	                cmp #$00
-.f1b4		d0 00		bne $f1b6	                bne joystickDone
-.f1b6						joystickDone
-.f1b6		a9 00		lda #$00	                lda #$00
-.f1b8		85 50		sta $50		                sta io.joy.CNT_0
-.f1ba		60		rts		                rts
-.f1bb						forwardX
-.f1bb		a5 02		lda $02		                lda L0ScrollXL
-.f1bd		18		clc		                clc
-.f1be		69 04		adc #$04	                adc #4
-.f1c0		85 02		sta $02		                sta L0ScrollXL
-.f1c2		8d 08 d2	sta $d208	                sta vky.tile.T0_MAP_X_POS_L
-.f1c5		a5 03		lda $03		                lda L0ScrollXH
-.f1c7		69 00		adc #$00	                adc #0
-.f1c9		85 03		sta $03		                sta L0ScrollXH
-.f1cb		8d 09 d2	sta $d209	                sta vky.tile.T0_MAP_X_POS_H
-.f1ce		a5 04		lda $04		                lda L1ScrollXL
-.f1d0		18		clc		                clc
-.f1d1		69 03		adc #$03	                adc #3
-.f1d3		85 04		sta $04		                sta L1ScrollXL
-.f1d5		8d 14 d2	sta $d214	                sta vky.tile.T1_MAP_X_POS_L
-.f1d8		a5 05		lda $05		                lda L1ScrollXH
-.f1da		69 00		adc #$00	                adc #0
-.f1dc		85 05		sta $05		                sta L1ScrollXH
-.f1de		8d 15 d2	sta $d215	                sta vky.tile.T1_MAP_X_POS_H
-.f1e1		a5 06		lda $06		                lda L2ScrollXL
-.f1e3		18		clc		                clc
-.f1e4		69 01		adc #$01	                adc #1;L2VX
-.f1e6		85 06		sta $06		                sta L2ScrollXL
-.f1e8		a5 07		lda $07		                lda L2ScrollXH
-.f1ea		69 00		adc #$00	                adc #0
-.f1ec		85 07		sta $07		                sta L2ScrollXH
-.f1ee		80 c6		bra $f1b6	                bra joystickDone
-.f1f0						backwardX
-.f1f0		a5 03		lda $03		                lda L0ScrollXH
-.f1f2		d0 06		bne $f1fa	                bne scroll
-.f1f4		a5 02		lda $02		                lda L0ScrollXL
-.f1f6		c9 00		cmp #$00	                cmp #$00
-.f1f8		f0 bc		beq $f1b6	                beq joystickDone
-.f1fa						scroll
-.f1fa		a5 02		lda $02		                lda L0ScrollXL
-.f1fc		38		sec		                sec
-.f1fd		e9 04		sbc #$04	                sbc #4
-.f1ff		85 02		sta $02		                sta L0ScrollXL
-.f201		8d 08 d2	sta $d208	                sta vky.tile.T0_MAP_X_POS_L
-.f204		a5 03		lda $03		                lda L0ScrollXH
-.f206		e9 00		sbc #$00	                sbc #0
-.f208		85 03		sta $03		                sta L0ScrollXH
-.f20a		8d 09 d2	sta $d209	                sta vky.tile.T0_MAP_X_POS_H
-.f20d		a5 04		lda $04		                lda L1ScrollXL
-.f20f		38		sec		                sec
-.f210		e9 03		sbc #$03	                sbc #3
-.f212		85 04		sta $04		                sta L1ScrollXL
-.f214		8d 14 d2	sta $d214	                sta vky.tile.T1_MAP_X_POS_L
-.f217		a5 05		lda $05		                lda L1ScrollXH
-.f219		e9 00		sbc #$00	                sbc #0
-.f21b		85 05		sta $05		                sta L1ScrollXH
-.f21d		8d 15 d2	sta $d215	                sta vky.tile.T1_MAP_X_POS_H
-.f220		a5 06		lda $06		                lda L2ScrollXL
-.f222		38		sec		                sec
-.f223		e9 01		sbc #$01	                sbc #1
-.f225		85 06		sta $06		                sta L2ScrollXL
-.f227		8d 20 d2	sta $d220	                sta vky.tile.T2_MAP_X_POS_L
-.f22a		a5 07		lda $07		                lda L2ScrollXH
-.f22c		e9 00		sbc #$00	                sbc #0
-.f22e		85 07		sta $07		                sta L2ScrollXH
-.f230		8d 21 d2	sta $d221	                sta vky.tile.T2_MAP_X_POS_H
-.f233		4c b6 f1	jmp $f1b6	                jmp joystickDone
+>e878		00 00 00 00 00 00 00 00
+.f181						InterruptHandlerJoystick:
+.f181		a9 01		lda #$01	                lda #interrupt.JR0_INT00_SOF
+.f183		2c 60 d6	bit $d660	                bit interrupt.PENDING_REG0
+.f186		f0 13		beq $f19b	                beq +
+.f188		8d 60 d6	sta $d660	                sta interrupt.PENDING_REG0
+.f18b		20 03 10	jsr $1003	                jsr musicPlay
+.f18e		ad 00 dc	lda $dc00	                lda io.joy.VIA0_IRB    ; Read VIA Port B to get Joystick Value
+.f191		29 1f		and #$1f	                and #$1F        ; Remove Unwanted bits
+.f193		c9 1f		cmp #$1f	                cmp #$1F        ; Any movement at all?
+.f195		d0 05		bne $f19c	                bne joystickNotDone
+.f197		a9 00		lda #$00	                lda #$00
+.f199		85 50		sta $50		                sta io.joy.CNT_0
+.f19b						        +
+.f19b		60		rts		                rts
+.f19c						joystickNotDone
+.f19c		ea		nop		                nop
+.f19d						joystickDoneNow
+.f19d		ad 00 dc	lda $dc00	                lda io.joy.VIA0_IRB
+.f1a0		85 52		sta $52		                sta io.joy.VAL
+.f1a2		29 04		and #$04	                and #$04              ; Check what value is cleared
+.f1a4		c9 00		cmp #$00	                cmp #$00
+.f1a6		f0 15		beq $f1bd	                beq forwardX
+.f1a8		a5 52		lda $52		                lda io.joy.VAL
+.f1aa		29 08		and #$08	                and #$08
+.f1ac		c9 00		cmp #$00	                cmp #$00
+.f1ae		f0 42		beq $f1f2	                beq backwardX
+.f1b0		a5 52		lda $52		                lda io.joy.VAL
+.f1b2		29 01		and #$01	                and #$01
+.f1b4		c9 00		cmp #$00	                cmp #$00
+.f1b6		d0 00		bne $f1b8	                bne joystickDone
+.f1b8						joystickDone
+.f1b8		a9 00		lda #$00	                lda #$00
+.f1ba		85 50		sta $50		                sta io.joy.CNT_0
+.f1bc		60		rts		                rts
+.f1bd						forwardX
+.f1bd		a5 02		lda $02		                lda L0ScrollXL
+.f1bf		18		clc		                clc
+.f1c0		69 04		adc #$04	                adc #4
+.f1c2		85 02		sta $02		                sta L0ScrollXL
+.f1c4		8d 08 d2	sta $d208	                sta vky.tile.T0_MAP_X_POS_L
+.f1c7		a5 03		lda $03		                lda L0ScrollXH
+.f1c9		69 00		adc #$00	                adc #0
+.f1cb		85 03		sta $03		                sta L0ScrollXH
+.f1cd		8d 09 d2	sta $d209	                sta vky.tile.T0_MAP_X_POS_H
+.f1d0		a5 04		lda $04		                lda L1ScrollXL
+.f1d2		18		clc		                clc
+.f1d3		69 03		adc #$03	                adc #3
+.f1d5		85 04		sta $04		                sta L1ScrollXL
+.f1d7		8d 14 d2	sta $d214	                sta vky.tile.T1_MAP_X_POS_L
+.f1da		a5 05		lda $05		                lda L1ScrollXH
+.f1dc		69 00		adc #$00	                adc #0
+.f1de		85 05		sta $05		                sta L1ScrollXH
+.f1e0		8d 15 d2	sta $d215	                sta vky.tile.T1_MAP_X_POS_H
+.f1e3		a5 06		lda $06		                lda L2ScrollXL
+.f1e5		18		clc		                clc
+.f1e6		69 01		adc #$01	                adc #1;L2VX
+.f1e8		85 06		sta $06		                sta L2ScrollXL
+.f1ea		a5 07		lda $07		                lda L2ScrollXH
+.f1ec		69 00		adc #$00	                adc #0
+.f1ee		85 07		sta $07		                sta L2ScrollXH
+.f1f0		80 c6		bra $f1b8	                bra joystickDone
+.f1f2						backwardX
+.f1f2		a5 03		lda $03		                lda L0ScrollXH
+.f1f4		d0 06		bne $f1fc	                bne scroll
+.f1f6		a5 02		lda $02		                lda L0ScrollXL
+.f1f8		c9 00		cmp #$00	                cmp #$00
+.f1fa		f0 bc		beq $f1b8	                beq joystickDone
+.f1fc						scroll
+.f1fc		a5 02		lda $02		                lda L0ScrollXL
+.f1fe		38		sec		                sec
+.f1ff		e9 04		sbc #$04	                sbc #4
+.f201		85 02		sta $02		                sta L0ScrollXL
+.f203		8d 08 d2	sta $d208	                sta vky.tile.T0_MAP_X_POS_L
+.f206		a5 03		lda $03		                lda L0ScrollXH
+.f208		e9 00		sbc #$00	                sbc #0
+.f20a		85 03		sta $03		                sta L0ScrollXH
+.f20c		8d 09 d2	sta $d209	                sta vky.tile.T0_MAP_X_POS_H
+.f20f		a5 04		lda $04		                lda L1ScrollXL
+.f211		38		sec		                sec
+.f212		e9 03		sbc #$03	                sbc #3
+.f214		85 04		sta $04		                sta L1ScrollXL
+.f216		8d 14 d2	sta $d214	                sta vky.tile.T1_MAP_X_POS_L
+.f219		a5 05		lda $05		                lda L1ScrollXH
+.f21b		e9 00		sbc #$00	                sbc #0
+.f21d		85 05		sta $05		                sta L1ScrollXH
+.f21f		8d 15 d2	sta $d215	                sta vky.tile.T1_MAP_X_POS_H
+.f222		a5 06		lda $06		                lda L2ScrollXL
+.f224		38		sec		                sec
+.f225		e9 01		sbc #$01	                sbc #1
+.f227		85 06		sta $06		                sta L2ScrollXL
+.f229		8d 20 d2	sta $d220	                sta vky.tile.T2_MAP_X_POS_L
+.f22c		a5 07		lda $07		                lda L2ScrollXH
+.f22e		e9 00		sbc #$00	                sbc #0
+.f230		85 07		sta $07		                sta L2ScrollXH
+.f232		8d 21 d2	sta $d221	                sta vky.tile.T2_MAP_X_POS_H
+.f235		4c b8 f1	jmp $f1b8	                jmp joystickDone
 
 ;******  Processing input file: src/rnd.asm
 
 >000f						seed	.fill 4
-.f236						galois24o
-.f236		a4 10		ldy $10			ldy seed+1 ; will move to seed+2 at the end
-.f238		a5 11		lda $11			lda seed+2
-.f23a		4a		lsr a			lsr
-.f23b		4a		lsr a			lsr
+.f238						galois24o
+.f238		a4 10		ldy $10			ldy seed+1 ; will move to seed+2 at the end
+.f23a		a5 11		lda $11			lda seed+2
 .f23c		4a		lsr a			lsr
 .f23d		4a		lsr a			lsr
-.f23e		85 10		sta $10			sta seed+1 ; reverse: %1011
-.f240		4a		lsr a			lsr
-.f241		4a		lsr a			lsr
-.f242		45 10		eor $10			eor seed+1
-.f244		4a		lsr a			lsr
-.f245		45 10		eor $10			eor seed+1
-.f247		45 0f		eor $0f			eor seed+0
-.f249		85 10		sta $10			sta seed+1
-.f24b		a5 11		lda $11			lda seed+2
-.f24d		0a		asl a			asl
-.f24e		45 11		eor $11			eor seed+2
-.f250		0a		asl a			asl
-.f251		0a		asl a			asl
-.f252		45 11		eor $11			eor seed+2
-.f254		0a		asl a			asl
-.f255		45 11		eor $11			eor seed+2
-.f257		84 11		sty $11			sty seed+2 ; finish rotating byte 1 into 2
-.f259		85 0f		sta $0f			sta seed+0
-.f25b		60		rts			rts
+.f23e		4a		lsr a			lsr
+.f23f		4a		lsr a			lsr
+.f240		85 10		sta $10			sta seed+1 ; reverse: %1011
+.f242		4a		lsr a			lsr
+.f243		4a		lsr a			lsr
+.f244		45 10		eor $10			eor seed+1
+.f246		4a		lsr a			lsr
+.f247		45 10		eor $10			eor seed+1
+.f249		45 0f		eor $0f			eor seed+0
+.f24b		85 10		sta $10			sta seed+1
+.f24d		a5 11		lda $11			lda seed+2
+.f24f		0a		asl a			asl
+.f250		45 11		eor $11			eor seed+2
+.f252		0a		asl a			asl
+.f253		0a		asl a			asl
+.f254		45 11		eor $11			eor seed+2
+.f256		0a		asl a			asl
+.f257		45 11		eor $11			eor seed+2
+.f259		84 11		sty $11			sty seed+2 ; finish rotating byte 1 into 2
+.f25b		85 0f		sta $0f			sta seed+0
+.f25d		60		rts			rts
 
 ;******  Processing input file: src/display.asm
 
@@ -4513,13 +4515,13 @@
 .e110		60		rts		            	rts
 .e111						initTextLUT
 .e111		a2 00		ldx #$00			ldx #$00
-.e113		bd 90 e8	lda $e890,x	loop0		lda FgColorLut,x		; get Local Data
+.e113		bd 80 e8	lda $e880,x	loop0		lda FgColorLut,x		; get Local Data
 .e116		9d 00 d8	sta $d800,x	                sta system.TEXT_LUT_FG,x	; Write in LUT Memory
 .e119		e8		inx		                inx
 .e11a		e0 40		cpx #$40	                cpx #$40
 .e11c		d0 f5		bne $e113	                bne loop0
 .e11e		a2 00		ldx #$00	                ldx #$00
-.e120		bd d0 e8	lda $e8d0,x	loop1		lda BgColorLut,x		; get Local Data
+.e120		bd c0 e8	lda $e8c0,x	loop1		lda BgColorLut,x		; get Local Data
 .e123		9d 40 d8	sta $d840,x	                sta system.TEXT_LUT_BG,x	; Write in LUT Memory
 .e126		e8		inx		                inx
 .e127		e0 40		cpx #$40	                cpx #$40
@@ -4568,7 +4570,7 @@
 .e16a		85 20		sta $20		                sta $20
 .e16c		a9 c0		lda #$c0	                lda #$C0
 .e16e		85 21		sta $21		                sta $21
-.e170		a9 10		lda #$10	                lda #<Text2Display
+.e170		a9 00		lda #$00	                lda #<Text2Display
 .e172		85 22		sta $22		                sta $22
 .e174		a9 e9		lda #$e9	                lda #>Text2Display
 .e176		85 23		sta $23		                sta $23
@@ -4587,66 +4589,66 @@
 .e18b		d0 ed		bne $e17a	                bne loopY
 .e18d						endSplash
 .e18d		60		rts		                rts
->e882						.align 16
-.e890						FgColorLut
->e890		00 00 00 ff					.text $00, $00, $00, $FF
->e894		00 00 80 ff			                .text $00, $00, $80, $FF
->e898		00 80 00 ff			                .text $00, $80, $00, $FF
->e89c		80 00 00 ff			                .text $80, $00, $00, $FF
->e8a0		00 80 80 ff			                .text $00, $80, $80, $FF
->e8a4		80 80 00 ff			                .text $80, $80, $00, $FF
->e8a8		80 00 80 ff			                .text $80, $00, $80, $FF
->e8ac		80 80 80 ff			                .text $80, $80, $80, $FF
->e8b0		00 45 ff ff			                .text $00, $45, $FF, $FF
->e8b4		13 45 8b ff			                .text $13, $45, $8B, $FF
->e8b8		00 00 20 ff			                .text $00, $00, $20, $FF
->e8bc		00 20 00 ff			                .text $00, $20, $00, $FF
->e8c0		20 00 00 ff			                .text $20, $00, $00, $FF
->e8c4		20 20 20 ff			                .text $20, $20, $20, $FF
->e8c8		ff 80 00 ff			                .text $FF, $80, $00, $FF
->e8cc		ff ff ff ff			                .text $FF, $FF, $FF, $FF
-.e8d0						BgColorLut
->e8d0		00 00 00 ff					.text $00, $00, $00, $FF  ;BGRA
->e8d4		aa 00 00 ff			                .text $AA, $00, $00, $FF
->e8d8		00 80 00 ff			                .text $00, $80, $00, $FF
->e8dc		00 00 80 ff			                .text $00, $00, $80, $FF
->e8e0		00 20 20 ff			                .text $00, $20, $20, $FF
->e8e4		20 20 00 ff			                .text $20, $20, $00, $FF
->e8e8		20 00 20 ff			                .text $20, $00, $20, $FF
->e8ec		20 20 20 ff			                .text $20, $20, $20, $FF
->e8f0		1e 69 d2 ff			                .text $1E, $69, $D2, $FF
->e8f4		13 45 8b ff			                .text $13, $45, $8B, $FF
->e8f8		00 00 20 ff			                .text $00, $00, $20, $FF
->e8fc		00 20 00 ff			                .text $00, $20, $00, $FF
->e900		40 00 00 ff			                .text $40, $00, $00, $FF
->e904		10 10 10 ff			                .text $10, $10, $10, $FF
->e908		40 40 40 ff			                .text $40, $40, $40, $FF
->e90c		ff ff ff ff			                .text $FF, $FF, $FF, $FF
->e910						.align 16
->e910		20 20 20 20 20 20 20 20		Text2Display    .text "                                                                                "
->e918		20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+>e880						.align 16
+.e880						FgColorLut
+>e880		00 00 00 ff					.text $00, $00, $00, $FF
+>e884		00 00 80 ff			                .text $00, $00, $80, $FF
+>e888		00 80 00 ff			                .text $00, $80, $00, $FF
+>e88c		80 00 00 ff			                .text $80, $00, $00, $FF
+>e890		00 80 80 ff			                .text $00, $80, $80, $FF
+>e894		80 80 00 ff			                .text $80, $80, $00, $FF
+>e898		80 00 80 ff			                .text $80, $00, $80, $FF
+>e89c		80 80 80 ff			                .text $80, $80, $80, $FF
+>e8a0		00 45 ff ff			                .text $00, $45, $FF, $FF
+>e8a4		13 45 8b ff			                .text $13, $45, $8B, $FF
+>e8a8		00 00 20 ff			                .text $00, $00, $20, $FF
+>e8ac		00 20 00 ff			                .text $00, $20, $00, $FF
+>e8b0		20 00 00 ff			                .text $20, $00, $00, $FF
+>e8b4		20 20 20 ff			                .text $20, $20, $20, $FF
+>e8b8		ff 80 00 ff			                .text $FF, $80, $00, $FF
+>e8bc		ff ff ff ff			                .text $FF, $FF, $FF, $FF
+.e8c0						BgColorLut
+>e8c0		00 00 00 ff					.text $00, $00, $00, $FF  ;BGRA
+>e8c4		aa 00 00 ff			                .text $AA, $00, $00, $FF
+>e8c8		00 80 00 ff			                .text $00, $80, $00, $FF
+>e8cc		00 00 80 ff			                .text $00, $00, $80, $FF
+>e8d0		00 20 20 ff			                .text $00, $20, $20, $FF
+>e8d4		20 20 00 ff			                .text $20, $20, $00, $FF
+>e8d8		20 00 20 ff			                .text $20, $00, $20, $FF
+>e8dc		20 20 20 ff			                .text $20, $20, $20, $FF
+>e8e0		1e 69 d2 ff			                .text $1E, $69, $D2, $FF
+>e8e4		13 45 8b ff			                .text $13, $45, $8B, $FF
+>e8e8		00 00 20 ff			                .text $00, $00, $20, $FF
+>e8ec		00 20 00 ff			                .text $00, $20, $00, $FF
+>e8f0		40 00 00 ff			                .text $40, $00, $00, $FF
+>e8f4		10 10 10 ff			                .text $10, $10, $10, $FF
+>e8f8		40 40 40 ff			                .text $40, $40, $40, $FF
+>e8fc		ff ff ff ff			                .text $FF, $FF, $FF, $FF
+>e900						.align 16
+>e900		20 20 20 20 20 20 20 20		Text2Display    .text "                                                                                "
+>e908		20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
 ;		...repeated 3 times (48 bytes)...
->e958		20 20 20 20 20 20 20 20
->e960		20 20 20 20 20 20 20 20		                .text "                ****         F256 Jr Showcase          ****                     "
->e968		20 20 20 20 20 20 20 20 2a 2a 2a 2a 20 20 20 20
->e978		20 20 20 20 20 46 32 35 36 20 4a 72 20 53 68 6f
->e988		77 63 61 73 65 20 20 20 20 20 20 20 20 20 20 2a
->e998		2a 2a 2a 20 20 20 20 20 20 20 20 20 20 20 20 20
->e9a8		20 20 20 20 20 20 20 20
->e9b0		00				                .text $00
->e9b1		54 48 45 20 50 53 32 20		FailedKbd       .text "THE PS2 INIT FAILED", $00
->e9b9		49 4e 49 54 20 46 41 49 4c 45 44 00
->e9c5		54 48 45 20 50 53 32 20		SuccessKbd      .text "THE PS2 INIT SUCCEEDED", $00
->e9cd		49 4e 49 54 20 53 55 43 43 45 45 44 45 44 00
->e9dc		54 48 45 20 53 44 43 41		FailedSDC       .text "THE SDCARD FAILED", $00
->e9e4		52 44 20 46 41 49 4c 45 44 00
->e9ee		54 48 45 20 53 44 43 41		SuccessSDC      .text "THE SDCARD INIT... SUCCESS", $00
->e9f6		52 44 20 49 4e 49 54 2e 2e 2e 20 53 55 43 43 45
->ea06		53 53 00
->ea09		4e 3a 43 32 35 36 4a 52		Format          .text "N:C256JR,S", $00, "A"
->ea11		2c 53 00 41
->ea15		30 31 32 33 34 35 36 37		HEX             .text "0123456789", $01, $02, $03, $04, $05, $00
->ea1d		38 39 01 02 03 04 05 00
+>e948		20 20 20 20 20 20 20 20
+>e950		20 20 20 20 20 20 20 20		                .text "                ****         F256 Jr Showcase          ****                     "
+>e958		20 20 20 20 20 20 20 20 2a 2a 2a 2a 20 20 20 20
+>e968		20 20 20 20 20 46 32 35 36 20 4a 72 20 53 68 6f
+>e978		77 63 61 73 65 20 20 20 20 20 20 20 20 20 20 2a
+>e988		2a 2a 2a 20 20 20 20 20 20 20 20 20 20 20 20 20
+>e998		20 20 20 20 20 20 20 20
+>e9a0		00				                .text $00
+>e9a1		54 48 45 20 50 53 32 20		FailedKbd       .text "THE PS2 INIT FAILED", $00
+>e9a9		49 4e 49 54 20 46 41 49 4c 45 44 00
+>e9b5		54 48 45 20 50 53 32 20		SuccessKbd      .text "THE PS2 INIT SUCCEEDED", $00
+>e9bd		49 4e 49 54 20 53 55 43 43 45 45 44 45 44 00
+>e9cc		54 48 45 20 53 44 43 41		FailedSDC       .text "THE SDCARD FAILED", $00
+>e9d4		52 44 20 46 41 49 4c 45 44 00
+>e9de		54 48 45 20 53 44 43 41		SuccessSDC      .text "THE SDCARD INIT... SUCCESS", $00
+>e9e6		52 44 20 49 4e 49 54 2e 2e 2e 20 53 55 43 43 45
+>e9f6		53 53 00
+>e9f9		4e 3a 43 32 35 36 4a 52		Format          .text "N:C256JR,S", $00, "A"
+>ea01		2c 53 00 41
+>ea05		30 31 32 33 34 35 36 37		HEX             .text "0123456789", $01, $02, $03, $04, $05, $00
+>ea0d		38 39 01 02 03 04 05 00
 
 ;******  Processing input file: src/audio.asm
 
