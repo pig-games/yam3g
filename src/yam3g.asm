@@ -8,6 +8,14 @@ TileMapYSize = 15
 PlayFieldXSize = 8
 PlayFieldYSize = 8
 
+HORIZONTAL_MATCH = %01000000
+VERTICAL_MATCH   = %10000000
+OFF_GEM_MN       = 1
+OFF_GEM_RIGHT    = 2
+OFF_GEM_RIGHT_MN = 3
+OFF_GEM_BELOW    = 16
+OFF_GEM_BELOW_MN = 17
+
 musicPlay = Music + 3
 
 ; Located in High Memory since Vicky can Reference them directly.
@@ -155,7 +163,7 @@ setLUT0_4_Tiles2
 
                 ; generate random tiles for map 1
         .block
-                lda #$1
+                lda #$5
                 sta rnd.seed 
                 sta rnd.seed+1 
                 sta rnd.seed+2
@@ -179,39 +187,64 @@ setLUT0_4_Tiles2
                 sta (PlayFieldAddr)
                 ; check for right most position, no gem to check to the right...
                 txa
-                and #$F
-                beq noMatch
+                and #$F                           ; check if our counter (x) is a multiple of 16 so right most
+                beq checkVertical                 ; we still want to check for a vertical match below
                 ; restore gem number and check for match with gem to the right
-                ldy #2
+                lda (PlayFieldAddr)
+                ldy #OFF_GEM_RIGHT
+                cmp (PlayFieldAddr),y
+                bne checkVertical                 ; no horizontal match so we check vertical
+                ; check for match amount for gem to the right
+                ldy #OFF_GEM_RIGHT_MN
+                lda #HORIZONTAL_MATCH             ; bit indicating horizontal match between two gems
+                sta Temp                          ; store for match processing, later on
+                and (PlayFieldAddr),y
+                beq incHorizontalMatchAmount
+                bra unmatchGem
+        checkVertical
+                cpx #112
+                bcs noMatch                       ; if >= 112, we're in the bottom row so no lower matches possible
+                ldy #OFF_GEM_BELOW
                 lda (PlayFieldAddr)
                 cmp (PlayFieldAddr),y
                 bne noMatch
-                ; check for match amount for gem to the right
-                ldy #3
-                lda (PlayFieldAddr),y
+                ldy #OFF_GEM_BELOW_MN
+                lda #VERTICAL_MATCH               ; bit indicating vertical match between two gems
+                sta Temp                          ; store for match processing
+                and (PlayFieldAddr),y
                 beq incHorizontalMatchAmount
-                ; we have a matching gem pair to the right so we increase the current gem number
+        unmatchGem
+                ; we have a matching gem pair below or to the right so we increase the current gem number
                 lda (PlayFieldAddr)
                 inc a                         ; increase gem number to no long match
                 and #7                        ; roll-over if needed
                 sta (PlayFieldAddr)           ; store new gem value
                 ; set current gem match amount to 0
                 lda #0
-                ldy #1
+                ldy #OFF_GEM_MN
                 sta (PlayFieldAddr),y
-                bra endMatching
+                bra endMatching                
         incHorizontalMatchAmount
                 ; our match with the right neighbour is isolated, so we set both match gem's amounts to 1
-                lda #1
-                ldy #1
+                ldy #OFF_GEM_MN
+                lda Temp
+                ora (PlayFieldAddr),y                ; set match direction bit for current gem
                 sta (PlayFieldAddr),y
-                ldy #3
+                lda Temp                                ; get our match direction
+                cmp #HORIZONTAL_MATCH
+                bne verticalMatch
+                ldy #OFF_GEM_RIGHT_MN
+                bra storeMatch
+        verticalMatch
+                ldy #OFF_GEM_BELOW_MN
+        storeMatch
+                ora (PlayFieldAddr),y
                 sta (PlayFieldAddr),y
                 bra endMatching                
         noMatch
                 ; no match we set the current gem's match amount to 0
                 lda #0
-                ldy #1
+                ldy #OFF_GEM_MN
                 sta (PlayfieldAddr),y
         endMatching
                 ; we're done matching let's do next gem
@@ -268,6 +301,7 @@ setLUT0_4_Tiles2
                 .section dp
 TileAddr        .fill 2
 PlayFieldAddr   .fill 2
+Temp            .byte 0
                 .send
                 .section data
         .align $100
