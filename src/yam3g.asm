@@ -163,7 +163,7 @@ setLUT0_4_Tiles2
 
                 ; generate random tiles for map 1
         .block
-                lda #$5
+                lda #$65
                 sta rnd.seed 
                 sta rnd.seed+1 
                 sta rnd.seed+2
@@ -183,8 +183,10 @@ setLUT0_4_Tiles2
                 lsr a
                 lsr a
                 lsr a
+                stz Temp
                 ; store in current gem position
                 sta (PlayFieldAddr)
+                ; jmp noMatch
                 ; check for right most position, no gem to check to the right...
                 txa
                 and #$F                           ; check if our counter (x) is a multiple of 16 so right most
@@ -199,20 +201,21 @@ setLUT0_4_Tiles2
                 lda #HORIZONTAL_MATCH             ; bit indicating horizontal match between two gems
                 sta Temp                          ; store for match processing, later on
                 and (PlayFieldAddr),y
-                beq incHorizontalMatchAmount
+                beq checkVertical ;incHorizontalMatchAmount
                 bra unmatchGem
         checkVertical
                 cpx #112
-                bcs noMatch                       ; if >= 112, we're in the bottom row so no lower matches possible
+                bcs incMatchAmount                ; if >= 112, we're in the bottom row so no lower matches possible, but maybe horizontal
                 ldy #OFF_GEM_BELOW
                 lda (PlayFieldAddr)
                 cmp (PlayFieldAddr),y
-                bne noMatch
+                bne incMatchAmount
                 ldy #OFF_GEM_BELOW_MN
                 lda #VERTICAL_MATCH               ; bit indicating vertical match between two gems
+                ora Temp
                 sta Temp                          ; store for match processing
                 and (PlayFieldAddr),y
-                beq incHorizontalMatchAmount
+                beq incMatchAmount
         unmatchGem
                 ; we have a matching gem pair below or to the right so we increase the current gem number
                 lda (PlayFieldAddr)
@@ -224,20 +227,22 @@ setLUT0_4_Tiles2
                 ldy #OFF_GEM_MN
                 sta (PlayFieldAddr),y
                 bra endMatching                
-        incHorizontalMatchAmount
+        incMatchAmount
                 ; our match with the right neighbour is isolated, so we set both match gem's amounts to 1
                 ldy #OFF_GEM_MN
                 lda Temp
-                ora (PlayFieldAddr),y                ; set match direction bit for current gem
                 sta (PlayFieldAddr),y
-                lda Temp                                ; get our match direction
-                cmp #HORIZONTAL_MATCH
+                bit #HORIZONTAL_MATCH
                 bne verticalMatch
                 ldy #OFF_GEM_RIGHT_MN
-                bra storeMatch
+                lda #HORIZONTAL_MATCH
+                ora (PlayFieldAddr),y
+                sta (PlayFieldAddr),y
         verticalMatch
+                bit #VERTICAL_MATCH
+                bne endMatching
                 ldy #OFF_GEM_BELOW_MN
-        storeMatch
+                lda #VERTICAL_MATCH
                 ora (PlayFieldAddr),y
                 sta (PlayFieldAddr),y
                 bra endMatching                
