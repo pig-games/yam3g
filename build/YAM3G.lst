@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.58.2974? listing file
 ; 64tass --long-address -b -fc -o build/YAM3G.bin --list build/YAM3G.lst --labels=build/YAM3G.lbl src/main.asm src/init.asm src/system.asm src/yam3g.asm src/rnd.asm src/display.asm src/audio.asm src/defs/interrupt.asm src/defs/tinyvicky.asm src/defs/io.asm src/textencoding.asm
-; Mon May  1 21:56:39 2023
+; Mon May  1 22:33:44 2023
 
 ;Offset	;PC	;Hex		;Monitor	;Source
 
@@ -4269,61 +4269,61 @@
 .f0fa		85 0f		sta $0f		                sta Temp                          ; store for match processing, later on
 .f0fc		31 0d		and ($0d),y	                and (PlayFieldAddr),y
 .f0fe		f0 02		beq $f102	                beq checkVertical ;incHorizontalMatchAmount
-.f100		80 1e		bra $f120	                bra unmatchGem
+.f100		80 20		bra $f122	                bra unmatchGem
 .f102						        checkVertical
-.f102		e0 38		cpx #$38	                cpx #56
+.f102		e0 39		cpx #$39	                cpx #57
 .f104		90 06		bcc $f10c	                bcc +
 .f106		a5 0f		lda $0f		                lda Temp                          ; no horizontal match so we're done
-.f108		f0 47		beq $f151	                beq noMatch
-.f10a		80 23		bra $f12f	                bra incMatchAmount                ; if >= 56, we're in the bottom row so no lower matches possible, but maybe horizontal
+.f108		f0 49		beq $f153	                beq noMatch
+.f10a		80 25		bra $f131	                bra incMatchAmount                ; if >= 56, we're in the bottom row so no lower matches possible, but maybe horizontal
 .f10c						        +
 .f10c		a0 10		ldy #$10	                ldy #OFF_GEM_BELOW
 .f10e		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
 .f110		d1 0d		cmp ($0d),y	                cmp (PlayFieldAddr),y
-.f112		d0 1b		bne $f12f	                bne incMatchAmount
+.f112		d0 1d		bne $f131	                bne incMatchAmount
 .f114		a0 11		ldy #$11	                ldy #OFF_GEM_BELOW_MN
 .f116		a9 80		lda #$80	                lda #VERTICAL_MATCH               ; bit indicating vertical match between two gems
 .f118		05 0f		ora $0f		                ora Temp
 .f11a		85 0f		sta $0f		                sta Temp                          ; store for match processing
-.f11c		31 0d		and ($0d),y	                and (PlayFieldAddr),y
-.f11e		f0 0f		beq $f12f	                beq incMatchAmount
-.f120						        unmatchGem
-.f120		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
-.f122		1a		inc a		                inc a                         ; increase gem number to no long match
-.f123		29 07		and #$07	                and #7                        ; roll-over if needed
-.f125		92 0d		sta ($0d)	                sta (PlayFieldAddr)           ; store new gem value
-.f127		a9 00		lda #$00	                lda #0
-.f129		a0 01		ldy #$01	                ldy #OFF_GEM_MN
-.f12b		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f12d		80 28		bra $f157	                bra endMatching
-.f12f						        incMatchAmount
-.f12f		a0 01		ldy #$01	                ldy #OFF_GEM_MN
-.f131		a5 0f		lda $0f		                lda Temp
-.f133		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f135		89 40		bit #$40	                bit #HORIZONTAL_MATCH
-.f137		f0 08		beq $f141	                beq verticalMatch
-.f139		a0 03		ldy #$03	                ldy #OFF_GEM_RIGHT_MN
-.f13b		a9 40		lda #$40	                lda #HORIZONTAL_MATCH
-.f13d		11 0d		ora ($0d),y	                ora (PlayFieldAddr),y
-.f13f		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f141						        verticalMatch
-.f141		a5 0f		lda $0f		                lda Temp
-.f143		89 80		bit #$80	                bit #VERTICAL_MATCH
-.f145		f0 10		beq $f157	                beq endMatching
-.f147		a0 11		ldy #$11	                ldy #OFF_GEM_BELOW_MN
-.f149		a9 80		lda #$80	                lda #VERTICAL_MATCH
-.f14b		11 0d		ora ($0d),y	                ora (PlayFieldAddr),y
-.f14d		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f14f		80 06		bra $f157	                bra endMatching
-.f151						        noMatch
-.f151		a9 00		lda #$00	                lda #0
-.f153		a0 01		ldy #$01	                ldy #OFF_GEM_MN
-.f155		91 0d		sta ($0d),y	                sta (PlayfieldAddr),y
-.f157						        endMatching
-.f157		c6 0d		dec $0d		                dec PlayFieldAddr
+.f11c		a9 80		lda #$80	                lda #VERTICAL_MATCH
+.f11e		31 0d		and ($0d),y	                and (PlayFieldAddr),y
+.f120		f0 0f		beq $f131	                beq incMatchAmount
+.f122						        unmatchGem
+.f122		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
+.f124		1a		inc a		                inc a                         ; increase gem number to no long match
+.f125		29 07		and #$07	                and #7                        ; roll-over if needed
+.f127		92 0d		sta ($0d)	                sta (PlayFieldAddr)           ; store new gem value
+.f129		a9 00		lda #$00	                lda #0
+.f12b		a0 01		ldy #$01	                ldy #OFF_GEM_MN
+.f12d		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
+.f12f		80 28		bra $f159	                bra endMatching
+.f131						        incMatchAmount
+.f131		a0 01		ldy #$01	                ldy #OFF_GEM_MN
+.f133		a5 0f		lda $0f		                lda Temp
+.f135		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
+.f137		89 40		bit #$40	                bit #HORIZONTAL_MATCH
+.f139		f0 08		beq $f143	                beq verticalMatch
+.f13b		a0 03		ldy #$03	                ldy #OFF_GEM_RIGHT_MN
+.f13d		a9 40		lda #$40	                lda #HORIZONTAL_MATCH
+.f13f		11 0d		ora ($0d),y	                ora (PlayFieldAddr),y
+.f141		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
+.f143						        verticalMatch
+.f143		a5 0f		lda $0f		                lda Temp
+.f145		89 80		bit #$80	                bit #VERTICAL_MATCH
+.f147		f0 10		beq $f159	                beq endMatching
+.f149		a0 11		ldy #$11	                ldy #OFF_GEM_BELOW_MN
+.f14b		a9 80		lda #$80	                lda #VERTICAL_MATCH
+.f14d		11 0d		ora ($0d),y	                ora (PlayFieldAddr),y
+.f14f		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
+.f151		80 06		bra $f159	                bra endMatching
+.f153						        noMatch
+.f153		a9 00		lda #$00	                lda #0
+.f155		a0 01		ldy #$01	                ldy #OFF_GEM_MN
+.f157		91 0d		sta ($0d),y	                sta (PlayfieldAddr),y
+.f159						        endMatching
 .f159		c6 0d		dec $0d		                dec PlayFieldAddr
-.f15b		ca		dex		                dex
-.f15c		e0 00		cpx #$00	                cpx #0
+.f15b		c6 0d		dec $0d		                dec PlayFieldAddr
+.f15d		ca		dex		                dex
 .f15e		f0 03		beq $f163	                beq +
 .f160		4c dd f0	jmp $f0dd	                jmp loop
 .f163						                +

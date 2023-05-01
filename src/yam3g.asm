@@ -184,7 +184,6 @@ setLUT0_4_Tiles2
                 stz Temp
                 ; store in current gem position
                 sta (PlayFieldAddr)
-                ; jmp noMatch
                 ; check for right most position, no gem to check to the right...
                 txa
                 and #$7                           ; check if our counter (x) is a multiple of 8 so right most
@@ -202,7 +201,7 @@ setLUT0_4_Tiles2
                 beq checkVertical ;incHorizontalMatchAmount
                 bra unmatchGem
         checkVertical
-                cpx #56
+                cpx #57
                 bcc +
                 lda Temp                          ; no horizontal match so we're done
                 beq noMatch
@@ -216,6 +215,7 @@ setLUT0_4_Tiles2
                 lda #VERTICAL_MATCH               ; bit indicating vertical match between two gems
                 ora Temp
                 sta Temp                          ; store for match processing
+                lda #VERTICAL_MATCH
                 and (PlayFieldAddr),y
                 beq incMatchAmount
         unmatchGem
@@ -259,7 +259,6 @@ setLUT0_4_Tiles2
                 dec PlayFieldAddr
                 dec PlayFieldAddr
                 dex
-                cpx #0
                 beq +
                 jmp loop
                 +
