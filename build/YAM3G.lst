@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.58.2974? listing file
 ; 64tass --long-address -b -fc -o build/YAM3G.bin --list build/YAM3G.lst --labels=build/YAM3G.lbl src/main.asm src/init.asm src/system.asm src/yam3g.asm src/rnd.asm src/display.asm src/audio.asm src/defs/interrupt.asm src/defs/tinyvicky.asm src/defs/io.asm src/textencoding.asm
-; Mon May  1 21:43:30 2023
+; Mon May  1 21:56:39 2023
 
 ;Offset	;PC	;Hex		;Monitor	;Source
 
@@ -319,7 +319,7 @@
 .fe01		da		phx		                phx
 .fe02		5a		phy		                phy
 .fe03		08		php		                php
-.fe04		20 b7 f1	jsr $f1b7	                jsr yam3g.InterruptHandlerJoystick
+.fe04		20 b5 f1	jsr $f1b5	                jsr yam3g.InterruptHandlerJoystick
 .fe07		28		plp		                plp
 .fe08		7a		ply		                ply
 .fe09		fa		plx		                plx
@@ -4249,134 +4249,132 @@
 .f0d9		85 0e		sta $0e		                sta PlayFieldAddr+1
 .f0db		a2 40		ldx #$40	                ldx #64
 .f0dd						        loop
-.f0dd		5a		phy		                phy
-.f0de		20 6e f2	jsr $f26e	                jsr rnd.galois24o
-.f0e1		7a		ply		                ply
+.f0dd		20 6c f2	jsr $f26c	                jsr rnd.galois24o
+.f0e0		4a		lsr a		                lsr a
+.f0e1		4a		lsr a		                lsr a
 .f0e2		4a		lsr a		                lsr a
 .f0e3		4a		lsr a		                lsr a
 .f0e4		4a		lsr a		                lsr a
-.f0e5		4a		lsr a		                lsr a
-.f0e6		4a		lsr a		                lsr a
-.f0e7		64 0f		stz $0f		                stz Temp
-.f0e9		92 0d		sta ($0d)	                sta (PlayFieldAddr)
-.f0eb		8a		txa		                txa
-.f0ec		29 07		and #$07	                and #$7                           ; check if our counter (x) is a multiple of 8 so right most
-.f0ee		f0 14		beq $f104	                beq checkVertical                 ; we still want to check for a vertical match below
-.f0f0		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
-.f0f2		a0 02		ldy #$02	                ldy #OFF_GEM_RIGHT
-.f0f4		d1 0d		cmp ($0d),y	                cmp (PlayFieldAddr),y
-.f0f6		d0 0c		bne $f104	                bne checkVertical                 ; no horizontal match so we check vertical
-.f0f8		a0 03		ldy #$03	                ldy #OFF_GEM_RIGHT_MN
-.f0fa		a9 40		lda #$40	                lda #HORIZONTAL_MATCH             ; bit indicating horizontal match between two gems
-.f0fc		85 0f		sta $0f		                sta Temp                          ; store for match processing, later on
-.f0fe		31 0d		and ($0d),y	                and (PlayFieldAddr),y
-.f100		f0 02		beq $f104	                beq checkVertical ;incHorizontalMatchAmount
-.f102		80 1e		bra $f122	                bra unmatchGem
-.f104						        checkVertical
-.f104		e0 38		cpx #$38	                cpx #56
-.f106		90 06		bcc $f10e	                bcc +
-.f108		a5 0f		lda $0f		                lda Temp                          ; no horizontal match so we're done
-.f10a		f0 47		beq $f153	                beq noMatch
-.f10c		80 23		bra $f131	                bra incMatchAmount                ; if >= 56, we're in the bottom row so no lower matches possible, but maybe horizontal
-.f10e						        +
-.f10e		a0 10		ldy #$10	                ldy #OFF_GEM_BELOW
-.f110		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
-.f112		d1 0d		cmp ($0d),y	                cmp (PlayFieldAddr),y
-.f114		d0 1b		bne $f131	                bne incMatchAmount
-.f116		a0 11		ldy #$11	                ldy #OFF_GEM_BELOW_MN
-.f118		a9 80		lda #$80	                lda #VERTICAL_MATCH               ; bit indicating vertical match between two gems
-.f11a		05 0f		ora $0f		                ora Temp
-.f11c		85 0f		sta $0f		                sta Temp                          ; store for match processing
-.f11e		31 0d		and ($0d),y	                and (PlayFieldAddr),y
-.f120		f0 0f		beq $f131	                beq incMatchAmount
-.f122						        unmatchGem
-.f122		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
-.f124		1a		inc a		                inc a                         ; increase gem number to no long match
-.f125		29 07		and #$07	                and #7                        ; roll-over if needed
-.f127		92 0d		sta ($0d)	                sta (PlayFieldAddr)           ; store new gem value
-.f129		a9 00		lda #$00	                lda #0
-.f12b		a0 01		ldy #$01	                ldy #OFF_GEM_MN
-.f12d		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f12f		80 28		bra $f159	                bra endMatching
-.f131						        incMatchAmount
-.f131		a0 01		ldy #$01	                ldy #OFF_GEM_MN
-.f133		a5 0f		lda $0f		                lda Temp
-.f135		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f137		89 40		bit #$40	                bit #HORIZONTAL_MATCH
-.f139		f0 08		beq $f143	                beq verticalMatch
-.f13b		a0 03		ldy #$03	                ldy #OFF_GEM_RIGHT_MN
-.f13d		a9 40		lda #$40	                lda #HORIZONTAL_MATCH
-.f13f		11 0d		ora ($0d),y	                ora (PlayFieldAddr),y
-.f141		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f143						        verticalMatch
-.f143		a5 0f		lda $0f		                lda Temp
-.f145		89 80		bit #$80	                bit #VERTICAL_MATCH
-.f147		f0 10		beq $f159	                beq endMatching
-.f149		a0 11		ldy #$11	                ldy #OFF_GEM_BELOW_MN
-.f14b		a9 80		lda #$80	                lda #VERTICAL_MATCH
-.f14d		11 0d		ora ($0d),y	                ora (PlayFieldAddr),y
-.f14f		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f151		80 06		bra $f159	                bra endMatching
-.f153						        noMatch
-.f153		a9 00		lda #$00	                lda #0
-.f155		a0 01		ldy #$01	                ldy #OFF_GEM_MN
-.f157		91 0d		sta ($0d),y	                sta (PlayfieldAddr),y
-.f159						        endMatching
+.f0e5		64 0f		stz $0f		                stz Temp
+.f0e7		92 0d		sta ($0d)	                sta (PlayFieldAddr)
+.f0e9		8a		txa		                txa
+.f0ea		29 07		and #$07	                and #$7                           ; check if our counter (x) is a multiple of 8 so right most
+.f0ec		f0 14		beq $f102	                beq checkVertical                 ; we still want to check for a vertical match below
+.f0ee		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
+.f0f0		a0 02		ldy #$02	                ldy #OFF_GEM_RIGHT
+.f0f2		d1 0d		cmp ($0d),y	                cmp (PlayFieldAddr),y
+.f0f4		d0 0c		bne $f102	                bne checkVertical                 ; no horizontal match so we check vertical
+.f0f6		a0 03		ldy #$03	                ldy #OFF_GEM_RIGHT_MN
+.f0f8		a9 40		lda #$40	                lda #HORIZONTAL_MATCH             ; bit indicating horizontal match between two gems
+.f0fa		85 0f		sta $0f		                sta Temp                          ; store for match processing, later on
+.f0fc		31 0d		and ($0d),y	                and (PlayFieldAddr),y
+.f0fe		f0 02		beq $f102	                beq checkVertical ;incHorizontalMatchAmount
+.f100		80 1e		bra $f120	                bra unmatchGem
+.f102						        checkVertical
+.f102		e0 38		cpx #$38	                cpx #56
+.f104		90 06		bcc $f10c	                bcc +
+.f106		a5 0f		lda $0f		                lda Temp                          ; no horizontal match so we're done
+.f108		f0 47		beq $f151	                beq noMatch
+.f10a		80 23		bra $f12f	                bra incMatchAmount                ; if >= 56, we're in the bottom row so no lower matches possible, but maybe horizontal
+.f10c						        +
+.f10c		a0 10		ldy #$10	                ldy #OFF_GEM_BELOW
+.f10e		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
+.f110		d1 0d		cmp ($0d),y	                cmp (PlayFieldAddr),y
+.f112		d0 1b		bne $f12f	                bne incMatchAmount
+.f114		a0 11		ldy #$11	                ldy #OFF_GEM_BELOW_MN
+.f116		a9 80		lda #$80	                lda #VERTICAL_MATCH               ; bit indicating vertical match between two gems
+.f118		05 0f		ora $0f		                ora Temp
+.f11a		85 0f		sta $0f		                sta Temp                          ; store for match processing
+.f11c		31 0d		and ($0d),y	                and (PlayFieldAddr),y
+.f11e		f0 0f		beq $f12f	                beq incMatchAmount
+.f120						        unmatchGem
+.f120		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
+.f122		1a		inc a		                inc a                         ; increase gem number to no long match
+.f123		29 07		and #$07	                and #7                        ; roll-over if needed
+.f125		92 0d		sta ($0d)	                sta (PlayFieldAddr)           ; store new gem value
+.f127		a9 00		lda #$00	                lda #0
+.f129		a0 01		ldy #$01	                ldy #OFF_GEM_MN
+.f12b		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
+.f12d		80 28		bra $f157	                bra endMatching
+.f12f						        incMatchAmount
+.f12f		a0 01		ldy #$01	                ldy #OFF_GEM_MN
+.f131		a5 0f		lda $0f		                lda Temp
+.f133		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
+.f135		89 40		bit #$40	                bit #HORIZONTAL_MATCH
+.f137		f0 08		beq $f141	                beq verticalMatch
+.f139		a0 03		ldy #$03	                ldy #OFF_GEM_RIGHT_MN
+.f13b		a9 40		lda #$40	                lda #HORIZONTAL_MATCH
+.f13d		11 0d		ora ($0d),y	                ora (PlayFieldAddr),y
+.f13f		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
+.f141						        verticalMatch
+.f141		a5 0f		lda $0f		                lda Temp
+.f143		89 80		bit #$80	                bit #VERTICAL_MATCH
+.f145		f0 10		beq $f157	                beq endMatching
+.f147		a0 11		ldy #$11	                ldy #OFF_GEM_BELOW_MN
+.f149		a9 80		lda #$80	                lda #VERTICAL_MATCH
+.f14b		11 0d		ora ($0d),y	                ora (PlayFieldAddr),y
+.f14d		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
+.f14f		80 06		bra $f157	                bra endMatching
+.f151						        noMatch
+.f151		a9 00		lda #$00	                lda #0
+.f153		a0 01		ldy #$01	                ldy #OFF_GEM_MN
+.f155		91 0d		sta ($0d),y	                sta (PlayfieldAddr),y
+.f157						        endMatching
+.f157		c6 0d		dec $0d		                dec PlayFieldAddr
 .f159		c6 0d		dec $0d		                dec PlayFieldAddr
-.f15b		c6 0d		dec $0d		                dec PlayFieldAddr
-.f15d		ca		dex		                dex
-.f15e		e0 00		cpx #$00	                cpx #0
-.f160		f0 03		beq $f165	                beq +
-.f162		4c dd f0	jmp $f0dd	                jmp loop
-.f165						                +
-.f165		a9 80		lda #$80			lda #$80
-.f167		85 00		sta $00				sta $00
-.f169		a5 09		lda $09				lda $08+$1
-.f16b		48		pha				pha
-.f16c		a9 08		lda #$08	                lda #8
-.f16e		85 09		sta $09		                sta $08+$1
-.f170		64 00		stz $00				stz $00
-.f172		a9 00		lda #$00	                lda #<PlayField
-.f174		85 0d		sta $0d		                sta PlayFieldAddr
-.f176		a9 e8		lda #$e8	                lda #>PlayField
-.f178		85 0e		sta $0e		                sta PlayFieldAddr+1
-.f17a		a9 b6		lda #$b6	                lda #(8*TileMapXSize)+14
-.f17c		85 0b		sta $0b		                sta TileAddr
-.f17e		a9 25		lda #$25	                lda #$25
-.f180		85 0c		sta $0c		                sta TileAddr+1
-.f182		a2 08		ldx #$08	                ldx #8
-.f184						        rowLoop
-.f184		a0 00		ldy #$00	                ldy #0
-.f186						        colLoop
-.f186		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
-.f188		18		clc		                clc
-.f189		69 50		adc #$50	                adc #80
-.f18b		91 0b		sta ($0b),y	                sta (TileAddr),y
-.f18d		a9 00		lda #$00	                lda #0
-.f18f		c8		iny		                iny
-.f190		91 0b		sta ($0b),y	                sta (TileAddr),y
-.f192		88		dey		                dey
+.f15b		ca		dex		                dex
+.f15c		e0 00		cpx #$00	                cpx #0
+.f15e		f0 03		beq $f163	                beq +
+.f160		4c dd f0	jmp $f0dd	                jmp loop
+.f163						                +
+.f163		a9 80		lda #$80			lda #$80
+.f165		85 00		sta $00				sta $00
+.f167		a5 09		lda $09				lda $08+$1
+.f169		48		pha				pha
+.f16a		a9 08		lda #$08	                lda #8
+.f16c		85 09		sta $09		                sta $08+$1
+.f16e		64 00		stz $00				stz $00
+.f170		a9 00		lda #$00	                lda #<PlayField
+.f172		85 0d		sta $0d		                sta PlayFieldAddr
+.f174		a9 e8		lda #$e8	                lda #>PlayField
+.f176		85 0e		sta $0e		                sta PlayFieldAddr+1
+.f178		a9 b6		lda #$b6	                lda #(8*TileMapXSize)+14
+.f17a		85 0b		sta $0b		                sta TileAddr
+.f17c		a9 25		lda #$25	                lda #$25
+.f17e		85 0c		sta $0c		                sta TileAddr+1
+.f180		a2 08		ldx #$08	                ldx #8
+.f182						        rowLoop
+.f182		a0 00		ldy #$00	                ldy #0
+.f184						        colLoop
+.f184		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
+.f186		18		clc		                clc
+.f187		69 50		adc #$50	                adc #80
+.f189		91 0b		sta ($0b),y	                sta (TileAddr),y
+.f18b		a9 00		lda #$00	                lda #0
+.f18d		c8		iny		                iny
+.f18e		91 0b		sta ($0b),y	                sta (TileAddr),y
+.f190		88		dey		                dey
+.f191		e6 0d		inc $0d		                inc PlayFieldAddr
 .f193		e6 0d		inc $0d		                inc PlayFieldAddr
-.f195		e6 0d		inc $0d		                inc PlayFieldAddr
-.f197		c8		iny		                iny
-.f198		c8		iny		                iny
-.f199		c0 10		cpy #$10	                cpy #16
-.f19b		d0 e9		bne $f186	                bne colLoop
-.f19d		18		clc		                clc
-.f19e		a5 0b		lda $0b		                lda TileAddr
-.f1a0		69 2a		adc #$2a	                adc #42
-.f1a2		85 0b		sta $0b		                sta TileAddr
-.f1a4		a5 0c		lda $0c		                lda TileAddr+1
-.f1a6		69 00		adc #$00	                adc #0
-.f1a8		85 0c		sta $0c		                sta TileAddr+1
-.f1aa		ca		dex		                dex
-.f1ab		d0 d7		bne $f184	                bne rowLoop
-.f1ad		a9 80		lda #$80			lda #$80
-.f1af		85 00		sta $00				sta $00
-.f1b1		68		pla				pla
-.f1b2		85 09		sta $09				sta $08+$1
-.f1b4		64 00		stz $00				stz $00
-.f1b6		60		rts		                rts
+.f195		c8		iny		                iny
+.f196		c8		iny		                iny
+.f197		c0 10		cpy #$10	                cpy #16
+.f199		d0 e9		bne $f184	                bne colLoop
+.f19b		18		clc		                clc
+.f19c		a5 0b		lda $0b		                lda TileAddr
+.f19e		69 2a		adc #$2a	                adc #42
+.f1a0		85 0b		sta $0b		                sta TileAddr
+.f1a2		a5 0c		lda $0c		                lda TileAddr+1
+.f1a4		69 00		adc #$00	                adc #0
+.f1a6		85 0c		sta $0c		                sta TileAddr+1
+.f1a8		ca		dex		                dex
+.f1a9		d0 d7		bne $f182	                bne rowLoop
+.f1ab		a9 80		lda #$80			lda #$80
+.f1ad		85 00		sta $00				sta $00
+.f1af		68		pla				pla
+.f1b0		85 09		sta $09				sta $08+$1
+.f1b2		64 00		stz $00				stz $00
+.f1b4		60		rts		                rts
 >000b						TileAddr        .fill 2
 >000d						PlayFieldAddr   .fill 2
 >000f		00				Temp            .byte 0
@@ -4386,132 +4384,132 @@
 ;		...repeated 6 times (96 bytes)...
 >e878		00 00 00 00 00 00 00 00
 .e880						PlayFieldEnd
-.f1b7						InterruptHandlerJoystick:
-.f1b7		a9 01		lda #$01	                lda #interrupt.JR0_INT00_SOF
-.f1b9		2c 60 d6	bit $d660	                bit interrupt.PENDING_REG0
-.f1bc		f0 13		beq $f1d1	                beq +
-.f1be		8d 60 d6	sta $d660	                sta interrupt.PENDING_REG0
-.f1c1		20 03 10	jsr $1003	                jsr musicPlay
-.f1c4		ad 00 dc	lda $dc00	                lda io.joy.VIA0_IRB    ; Read VIA Port B to get Joystick Value
-.f1c7		29 1f		and #$1f	                and #$1F        ; Remove Unwanted bits
-.f1c9		c9 1f		cmp #$1f	                cmp #$1F        ; Any movement at all?
-.f1cb		d0 05		bne $f1d2	                bne joystickNotDone
-.f1cd		a9 00		lda #$00	                lda #$00
-.f1cf		85 50		sta $50		                sta io.joy.CNT_0
-.f1d1						        +
-.f1d1		60		rts		                rts
-.f1d2						joystickNotDone
-.f1d2		ea		nop		                nop
-.f1d3						joystickDoneNow
-.f1d3		ad 00 dc	lda $dc00	                lda io.joy.VIA0_IRB
-.f1d6		85 52		sta $52		                sta io.joy.VAL
-.f1d8		29 04		and #$04	                and #$04              ; Check what value is cleared
-.f1da		c9 00		cmp #$00	                cmp #$00
-.f1dc		f0 15		beq $f1f3	                beq forwardX
-.f1de		a5 52		lda $52		                lda io.joy.VAL
-.f1e0		29 08		and #$08	                and #$08
-.f1e2		c9 00		cmp #$00	                cmp #$00
-.f1e4		f0 42		beq $f228	                beq backwardX
-.f1e6		a5 52		lda $52		                lda io.joy.VAL
-.f1e8		29 01		and #$01	                and #$01
-.f1ea		c9 00		cmp #$00	                cmp #$00
-.f1ec		d0 00		bne $f1ee	                bne joystickDone
-.f1ee						joystickDone
-.f1ee		a9 00		lda #$00	                lda #$00
-.f1f0		85 50		sta $50		                sta io.joy.CNT_0
-.f1f2		60		rts		                rts
-.f1f3						forwardX
-.f1f3		a5 02		lda $02		                lda L0ScrollXL
-.f1f5		18		clc		                clc
-.f1f6		69 04		adc #$04	                adc #4
-.f1f8		85 02		sta $02		                sta L0ScrollXL
-.f1fa		8d 08 d2	sta $d208	                sta vky.tile.T0_MAP_X_POS_L
-.f1fd		a5 03		lda $03		                lda L0ScrollXH
-.f1ff		69 00		adc #$00	                adc #0
-.f201		85 03		sta $03		                sta L0ScrollXH
-.f203		8d 09 d2	sta $d209	                sta vky.tile.T0_MAP_X_POS_H
-.f206		a5 04		lda $04		                lda L1ScrollXL
-.f208		18		clc		                clc
-.f209		69 03		adc #$03	                adc #3
-.f20b		85 04		sta $04		                sta L1ScrollXL
-.f20d		8d 14 d2	sta $d214	                sta vky.tile.T1_MAP_X_POS_L
-.f210		a5 05		lda $05		                lda L1ScrollXH
-.f212		69 00		adc #$00	                adc #0
-.f214		85 05		sta $05		                sta L1ScrollXH
-.f216		8d 15 d2	sta $d215	                sta vky.tile.T1_MAP_X_POS_H
-.f219		a5 06		lda $06		                lda L2ScrollXL
-.f21b		18		clc		                clc
-.f21c		69 01		adc #$01	                adc #1;L2VX
-.f21e		85 06		sta $06		                sta L2ScrollXL
-.f220		a5 07		lda $07		                lda L2ScrollXH
-.f222		69 00		adc #$00	                adc #0
-.f224		85 07		sta $07		                sta L2ScrollXH
-.f226		80 c6		bra $f1ee	                bra joystickDone
-.f228						backwardX
-.f228		a5 03		lda $03		                lda L0ScrollXH
-.f22a		d0 06		bne $f232	                bne scroll
-.f22c		a5 02		lda $02		                lda L0ScrollXL
-.f22e		c9 00		cmp #$00	                cmp #$00
-.f230		f0 bc		beq $f1ee	                beq joystickDone
-.f232						scroll
-.f232		a5 02		lda $02		                lda L0ScrollXL
-.f234		38		sec		                sec
-.f235		e9 04		sbc #$04	                sbc #4
-.f237		85 02		sta $02		                sta L0ScrollXL
-.f239		8d 08 d2	sta $d208	                sta vky.tile.T0_MAP_X_POS_L
-.f23c		a5 03		lda $03		                lda L0ScrollXH
-.f23e		e9 00		sbc #$00	                sbc #0
-.f240		85 03		sta $03		                sta L0ScrollXH
-.f242		8d 09 d2	sta $d209	                sta vky.tile.T0_MAP_X_POS_H
-.f245		a5 04		lda $04		                lda L1ScrollXL
-.f247		38		sec		                sec
-.f248		e9 03		sbc #$03	                sbc #3
-.f24a		85 04		sta $04		                sta L1ScrollXL
-.f24c		8d 14 d2	sta $d214	                sta vky.tile.T1_MAP_X_POS_L
-.f24f		a5 05		lda $05		                lda L1ScrollXH
-.f251		e9 00		sbc #$00	                sbc #0
-.f253		85 05		sta $05		                sta L1ScrollXH
-.f255		8d 15 d2	sta $d215	                sta vky.tile.T1_MAP_X_POS_H
-.f258		a5 06		lda $06		                lda L2ScrollXL
-.f25a		38		sec		                sec
-.f25b		e9 01		sbc #$01	                sbc #1
-.f25d		85 06		sta $06		                sta L2ScrollXL
-.f25f		8d 20 d2	sta $d220	                sta vky.tile.T2_MAP_X_POS_L
-.f262		a5 07		lda $07		                lda L2ScrollXH
-.f264		e9 00		sbc #$00	                sbc #0
-.f266		85 07		sta $07		                sta L2ScrollXH
-.f268		8d 21 d2	sta $d221	                sta vky.tile.T2_MAP_X_POS_H
-.f26b		4c ee f1	jmp $f1ee	                jmp joystickDone
+.f1b5						InterruptHandlerJoystick:
+.f1b5		a9 01		lda #$01	                lda #interrupt.JR0_INT00_SOF
+.f1b7		2c 60 d6	bit $d660	                bit interrupt.PENDING_REG0
+.f1ba		f0 13		beq $f1cf	                beq +
+.f1bc		8d 60 d6	sta $d660	                sta interrupt.PENDING_REG0
+.f1bf		20 03 10	jsr $1003	                jsr musicPlay
+.f1c2		ad 00 dc	lda $dc00	                lda io.joy.VIA0_IRB    ; Read VIA Port B to get Joystick Value
+.f1c5		29 1f		and #$1f	                and #$1F        ; Remove Unwanted bits
+.f1c7		c9 1f		cmp #$1f	                cmp #$1F        ; Any movement at all?
+.f1c9		d0 05		bne $f1d0	                bne joystickNotDone
+.f1cb		a9 00		lda #$00	                lda #$00
+.f1cd		85 50		sta $50		                sta io.joy.CNT_0
+.f1cf						        +
+.f1cf		60		rts		                rts
+.f1d0						joystickNotDone
+.f1d0		ea		nop		                nop
+.f1d1						joystickDoneNow
+.f1d1		ad 00 dc	lda $dc00	                lda io.joy.VIA0_IRB
+.f1d4		85 52		sta $52		                sta io.joy.VAL
+.f1d6		29 04		and #$04	                and #$04              ; Check what value is cleared
+.f1d8		c9 00		cmp #$00	                cmp #$00
+.f1da		f0 15		beq $f1f1	                beq forwardX
+.f1dc		a5 52		lda $52		                lda io.joy.VAL
+.f1de		29 08		and #$08	                and #$08
+.f1e0		c9 00		cmp #$00	                cmp #$00
+.f1e2		f0 42		beq $f226	                beq backwardX
+.f1e4		a5 52		lda $52		                lda io.joy.VAL
+.f1e6		29 01		and #$01	                and #$01
+.f1e8		c9 00		cmp #$00	                cmp #$00
+.f1ea		d0 00		bne $f1ec	                bne joystickDone
+.f1ec						joystickDone
+.f1ec		a9 00		lda #$00	                lda #$00
+.f1ee		85 50		sta $50		                sta io.joy.CNT_0
+.f1f0		60		rts		                rts
+.f1f1						forwardX
+.f1f1		a5 02		lda $02		                lda L0ScrollXL
+.f1f3		18		clc		                clc
+.f1f4		69 04		adc #$04	                adc #4
+.f1f6		85 02		sta $02		                sta L0ScrollXL
+.f1f8		8d 08 d2	sta $d208	                sta vky.tile.T0_MAP_X_POS_L
+.f1fb		a5 03		lda $03		                lda L0ScrollXH
+.f1fd		69 00		adc #$00	                adc #0
+.f1ff		85 03		sta $03		                sta L0ScrollXH
+.f201		8d 09 d2	sta $d209	                sta vky.tile.T0_MAP_X_POS_H
+.f204		a5 04		lda $04		                lda L1ScrollXL
+.f206		18		clc		                clc
+.f207		69 03		adc #$03	                adc #3
+.f209		85 04		sta $04		                sta L1ScrollXL
+.f20b		8d 14 d2	sta $d214	                sta vky.tile.T1_MAP_X_POS_L
+.f20e		a5 05		lda $05		                lda L1ScrollXH
+.f210		69 00		adc #$00	                adc #0
+.f212		85 05		sta $05		                sta L1ScrollXH
+.f214		8d 15 d2	sta $d215	                sta vky.tile.T1_MAP_X_POS_H
+.f217		a5 06		lda $06		                lda L2ScrollXL
+.f219		18		clc		                clc
+.f21a		69 01		adc #$01	                adc #1;L2VX
+.f21c		85 06		sta $06		                sta L2ScrollXL
+.f21e		a5 07		lda $07		                lda L2ScrollXH
+.f220		69 00		adc #$00	                adc #0
+.f222		85 07		sta $07		                sta L2ScrollXH
+.f224		80 c6		bra $f1ec	                bra joystickDone
+.f226						backwardX
+.f226		a5 03		lda $03		                lda L0ScrollXH
+.f228		d0 06		bne $f230	                bne scroll
+.f22a		a5 02		lda $02		                lda L0ScrollXL
+.f22c		c9 00		cmp #$00	                cmp #$00
+.f22e		f0 bc		beq $f1ec	                beq joystickDone
+.f230						scroll
+.f230		a5 02		lda $02		                lda L0ScrollXL
+.f232		38		sec		                sec
+.f233		e9 04		sbc #$04	                sbc #4
+.f235		85 02		sta $02		                sta L0ScrollXL
+.f237		8d 08 d2	sta $d208	                sta vky.tile.T0_MAP_X_POS_L
+.f23a		a5 03		lda $03		                lda L0ScrollXH
+.f23c		e9 00		sbc #$00	                sbc #0
+.f23e		85 03		sta $03		                sta L0ScrollXH
+.f240		8d 09 d2	sta $d209	                sta vky.tile.T0_MAP_X_POS_H
+.f243		a5 04		lda $04		                lda L1ScrollXL
+.f245		38		sec		                sec
+.f246		e9 03		sbc #$03	                sbc #3
+.f248		85 04		sta $04		                sta L1ScrollXL
+.f24a		8d 14 d2	sta $d214	                sta vky.tile.T1_MAP_X_POS_L
+.f24d		a5 05		lda $05		                lda L1ScrollXH
+.f24f		e9 00		sbc #$00	                sbc #0
+.f251		85 05		sta $05		                sta L1ScrollXH
+.f253		8d 15 d2	sta $d215	                sta vky.tile.T1_MAP_X_POS_H
+.f256		a5 06		lda $06		                lda L2ScrollXL
+.f258		38		sec		                sec
+.f259		e9 01		sbc #$01	                sbc #1
+.f25b		85 06		sta $06		                sta L2ScrollXL
+.f25d		8d 20 d2	sta $d220	                sta vky.tile.T2_MAP_X_POS_L
+.f260		a5 07		lda $07		                lda L2ScrollXH
+.f262		e9 00		sbc #$00	                sbc #0
+.f264		85 07		sta $07		                sta L2ScrollXH
+.f266		8d 21 d2	sta $d221	                sta vky.tile.T2_MAP_X_POS_H
+.f269		4c ec f1	jmp $f1ec	                jmp joystickDone
 
 ;******  Processing input file: src/rnd.asm
 
 >0010						seed	.fill 4
-.f26e						galois24o
-.f26e		a4 11		ldy $11			ldy seed+1 ; will move to seed+2 at the end
-.f270		a5 12		lda $12			lda seed+2
+.f26c						galois24o
+.f26c		a4 11		ldy $11			ldy seed+1 ; will move to seed+2 at the end
+.f26e		a5 12		lda $12			lda seed+2
+.f270		4a		lsr a			lsr
+.f271		4a		lsr a			lsr
 .f272		4a		lsr a			lsr
 .f273		4a		lsr a			lsr
-.f274		4a		lsr a			lsr
-.f275		4a		lsr a			lsr
-.f276		85 11		sta $11			sta seed+1 ; reverse: %1011
-.f278		4a		lsr a			lsr
-.f279		4a		lsr a			lsr
-.f27a		45 11		eor $11			eor seed+1
-.f27c		4a		lsr a			lsr
-.f27d		45 11		eor $11			eor seed+1
-.f27f		45 10		eor $10			eor seed+0
-.f281		85 11		sta $11			sta seed+1
-.f283		a5 12		lda $12			lda seed+2
-.f285		0a		asl a			asl
-.f286		45 12		eor $12			eor seed+2
-.f288		0a		asl a			asl
-.f289		0a		asl a			asl
-.f28a		45 12		eor $12			eor seed+2
-.f28c		0a		asl a			asl
-.f28d		45 12		eor $12			eor seed+2
-.f28f		84 12		sty $12			sty seed+2 ; finish rotating byte 1 into 2
-.f291		85 10		sta $10			sta seed+0
-.f293		60		rts			rts
+.f274		85 11		sta $11			sta seed+1 ; reverse: %1011
+.f276		4a		lsr a			lsr
+.f277		4a		lsr a			lsr
+.f278		45 11		eor $11			eor seed+1
+.f27a		4a		lsr a			lsr
+.f27b		45 11		eor $11			eor seed+1
+.f27d		45 10		eor $10			eor seed+0
+.f27f		85 11		sta $11			sta seed+1
+.f281		a5 12		lda $12			lda seed+2
+.f283		0a		asl a			asl
+.f284		45 12		eor $12			eor seed+2
+.f286		0a		asl a			asl
+.f287		0a		asl a			asl
+.f288		45 12		eor $12			eor seed+2
+.f28a		0a		asl a			asl
+.f28b		45 12		eor $12			eor seed+2
+.f28d		84 12		sty $12			sty seed+2 ; finish rotating byte 1 into 2
+.f28f		85 10		sta $10			sta seed+0
+.f291		60		rts			rts
 
 ;******  Processing input file: src/display.asm
 

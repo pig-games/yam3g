@@ -175,9 +175,7 @@ setLUT0_4_Tiles2
                 ldx #64
         loop
                 ; get random number
-                phy
                 jsr rnd.galois24o
-                ply                
                 lsr a
                 lsr a
                 lsr a
