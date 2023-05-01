@@ -172,7 +172,7 @@ setLUT0_4_Tiles2
                 lda #>PlayFieldEnd
                 sta PlayFieldAddr+1
 
-                ldx #128
+                ldx #64
         loop
                 ; get random number
                 phy
@@ -189,7 +189,7 @@ setLUT0_4_Tiles2
                 ; jmp noMatch
                 ; check for right most position, no gem to check to the right...
                 txa
-                and #$F                           ; check if our counter (x) is a multiple of 16 so right most
+                and #$7                           ; check if our counter (x) is a multiple of 8 so right most
                 beq checkVertical                 ; we still want to check for a vertical match below
                 ; restore gem number and check for match with gem to the right
                 lda (PlayFieldAddr)
@@ -204,8 +204,12 @@ setLUT0_4_Tiles2
                 beq checkVertical ;incHorizontalMatchAmount
                 bra unmatchGem
         checkVertical
-                cpx #112
-                bcs incMatchAmount                ; if >= 112, we're in the bottom row so no lower matches possible, but maybe horizontal
+                cpx #56
+                bcc +
+                lda Temp                          ; no horizontal match so we're done
+                beq noMatch
+                bra incMatchAmount                ; if >= 56, we're in the bottom row so no lower matches possible, but maybe horizontal
+        + 
                 ldy #OFF_GEM_BELOW
                 lda (PlayFieldAddr)
                 cmp (PlayFieldAddr),y
@@ -233,14 +237,15 @@ setLUT0_4_Tiles2
                 lda Temp
                 sta (PlayFieldAddr),y
                 bit #HORIZONTAL_MATCH
-                bne verticalMatch
+                beq verticalMatch
                 ldy #OFF_GEM_RIGHT_MN
                 lda #HORIZONTAL_MATCH
                 ora (PlayFieldAddr),y
                 sta (PlayFieldAddr),y
         verticalMatch
+                lda Temp
                 bit #VERTICAL_MATCH
-                bne endMatching
+                beq endMatching
                 ldy #OFF_GEM_BELOW_MN
                 lda #VERTICAL_MATCH
                 ora (PlayFieldAddr),y
@@ -256,7 +261,10 @@ setLUT0_4_Tiles2
                 dec PlayFieldAddr
                 dec PlayFieldAddr
                 dex
-                bne loop
+                cpx #0
+                beq +
+                jmp loop
+                +
         .bend
 
         .block
