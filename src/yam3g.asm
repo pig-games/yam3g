@@ -176,11 +176,6 @@ setLUT0_4_Tiles2
         loop
                 ; get random number
                 jsr rnd.galois24o
-                lsr a
-                lsr a
-                lsr a
-                lsr a
-                lsr a
                 stz Temp
                 ; store in current gem position
                 sta (PlayFieldAddr)
@@ -198,10 +193,10 @@ setLUT0_4_Tiles2
                 lda #HORIZONTAL_MATCH             ; bit indicating horizontal match between two gems
                 sta Temp                          ; store for match processing, later on
                 and (PlayFieldAddr),y
-                beq checkVertical ;incHorizontalMatchAmount
+                beq checkVertical
                 bra unmatchGem
         checkVertical
-                cpx #57
+                cpx #57                           ; check if we're on the bottom row, if so no vertical matching is needed
                 bcc +
                 lda Temp                          ; no horizontal match so we're done
                 beq noMatch
@@ -230,7 +225,7 @@ setLUT0_4_Tiles2
                 sta (PlayFieldAddr),y
                 bra endMatching                
         incMatchAmount
-                ; our match with the right neighbour is isolated, so we set both match gem's amounts to 1
+                ; our match with the right neighbour is isolated, so we set involved match gem's amounts to 1
                 ldy #OFF_GEM_MN
                 lda Temp
                 sta (PlayFieldAddr),y
@@ -248,7 +243,7 @@ setLUT0_4_Tiles2
                 lda #VERTICAL_MATCH
                 ora (PlayFieldAddr),y
                 sta (PlayFieldAddr),y
-                bra endMatching                
+                bra endMatching
         noMatch
                 ; no match we set the current gem's match amount to 0
                 lda #0
@@ -259,9 +254,7 @@ setLUT0_4_Tiles2
                 dec PlayFieldAddr
                 dec PlayFieldAddr
                 dex
-                beq +
-                jmp loop
-                +
+                bne loop
         .bend
 
         .block

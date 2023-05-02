@@ -43,6 +43,12 @@ galois24o
 	eor seed+2
 	sty seed+2 ; finish rotating byte 1 into 2
 	sta seed+0
+
+        lsr a
+        lsr a
+        lsr a
+        lsr a
+        lsr a
 	rts
 
 .send ; end section yam3g
