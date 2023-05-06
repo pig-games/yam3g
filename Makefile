@@ -13,6 +13,7 @@ SRC = 	src/main.asm \
 		src/init.asm \
 		src/system.asm \
 		src/yam3g.asm \
+		src/playfield.asm \
 		src/rnd.asm \
 		src/display.asm \
 		src/audio.asm \
