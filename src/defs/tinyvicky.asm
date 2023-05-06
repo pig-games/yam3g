@@ -25,6 +25,14 @@ REG_L	                = $D000
         
 .endn ; end namespace mctrl
 
+sysctrl        .namespace
+        LFSR_DATA_LO     = $D6A4
+        LFSR_DATA_HI     = $D6A5
+        LFSR_CTRL        = $D6A6
+        LFSR_ENABLE      = $01
+        LFSR_SEED_WRITE  = $02
+.endnamespace ; sysctrl
+
 ; Reserved - TBD
 layer           .namespace
         CTRL_REG0                = $D002

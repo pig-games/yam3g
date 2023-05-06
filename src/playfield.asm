@@ -28,9 +28,12 @@ OFF_GEM_BELOW_MN = 17
 
 generateNew .proc
                 lda #$65
-                sta rnd.seed 
-                sta rnd.seed+1 
-                sta rnd.seed+2
+                sta vky.sysctrl.LFSR_DATA_LO       ; store seed
+                sta vky.sysctrl.LFSR_DATA_HI
+                lda #vky.sysctrl.LFSR_SEED_WRITE
+                sta vky.sysctrl.LFSR_CTRL          ; toggle write
+                lda #vky.sysctrl.LFSR_ENABLE
+                sta vky.sysctrl.LFSR_CTRL          ; enable
                 lda #<PlayFieldEnd-2
                 sta PlayFieldAddr
                 lda #>PlayFieldEnd
@@ -39,7 +42,7 @@ generateNew .proc
                 ldx #64
         loop
                 ; get random number
-                jsr rnd.galois24o
+                jsr rnd.generate
                 stz Temp
                 ; store in current gem position
                 sta (PlayFieldAddr)
@@ -60,12 +63,11 @@ generateNew .proc
                 beq checkVertical
                 bra unmatchGem
         checkVertical
-                cpx #57                           ; check if we're on the bottom row, if so no vertical matching is needed
-                bcc +
-                lda Temp                          ; no horizontal match so we're done
-                beq noMatch
+                cpx #57                           ; check if we're on the bottom row, if so, no vertical matching is needed
+                bcc notBottomRow
+                beq noMatch                       ; a still contains the horizontal match bit, if no horizontal match we're done
                 bra incMatchAmount                ; if >= 56, we're in the bottom row so no lower matches possible, but maybe horizontal
-        + 
+        notBottomRow
                 ldy #OFF_GEM_BELOW
                 lda (PlayFieldAddr)
                 cmp (PlayFieldAddr),y
