@@ -26,21 +26,21 @@ musicPlay = Music + 3
 .send
 
 .section tilesetpalette
-TileMapPalette	     .binary "../tile_data/tileset.pal.bin"
+        TileMapPalette	     .binary "../tile_data/tileset.pal.bin"
 .send
 
 ; Start of actual yam3g code
 
 .section dp
-L0ScrollXL      .byte 0
-L0ScrollXH      .byte 0
-L1ScrollXL      .byte 0
-L1ScrollXH      .byte 0
-L2ScrollXL      .byte 0
-L2ScrollXH      .byte 0
-L2VXLO          .byte 0
-L2VXHI          .byte 0
-L2SLINE         .byte 0
+        L0ScrollXL      .byte 0
+        L0ScrollXH      .byte 0
+        L1ScrollXL      .byte 0
+        L1ScrollXH      .byte 0
+        L2ScrollXL      .byte 0
+        L2ScrollXH      .byte 0
+        L2VXLO          .byte 0
+        L2VXHI          .byte 0
+        L2SLINE         .byte 0
 .send
 
 .section        yam3g

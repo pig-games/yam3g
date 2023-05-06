@@ -12,11 +12,10 @@ OFF_GEM_RIGHT_MN = 3
 OFF_GEM_BELOW    = 16
 OFF_GEM_BELOW_MN = 17
 
-.section	data
+.section data
         .align $100
-PlayField       .fill 128,0
-PlayFieldEnd
-
+	PlayField       .fill 128,0
+	PlayFieldEnd
 .endsection
 
 .section dp
@@ -25,9 +24,9 @@ PlayFieldEnd
 	Temp            .byte 0
 .endsection
 
-.section	yam3g
+.section yam3g
 
-generateNew     .proc
+generateNew .proc
                 lda #$65
                 sta rnd.seed 
                 sta rnd.seed+1 
@@ -120,10 +119,10 @@ generateNew     .proc
                 dec PlayFieldAddr
                 dex
                 bne loop
-		rts
-        .endproc
+	rts
+.endproc
 
-updateTileMap   .proc
+updateTileMap .proc
                 ; Create tilemap for PlayField                
                 ; setup mmu for tile map access
                 #system.setMMU 1, 8
@@ -165,7 +164,7 @@ updateTileMap   .proc
                 bne rowLoop
                 #system.resetMMU 1
 
-		rts
+	rts
 .endproc ; updateTileMap
 
 .endsection 	; yam3g
