@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.58.2974? listing file
 ; 64tass --long-address -b -fc -o build/YAM3G.bin --list build/YAM3G.lst --labels=build/YAM3G.lbl src/main.asm src/init.asm src/system.asm src/yam3g.asm src/playfield.asm src/rnd.asm src/display.asm src/audio.asm src/defs/interrupt.asm src/defs/tinyvicky.asm src/defs/io.asm src/textencoding.asm
-; Tue May  9 14:09:00 2023
+; Tue May  9 14:16:47 2023
 
 ;Offset	;PC	;Hex		;Monitor	;Source
 
@@ -4350,14 +4350,14 @@
 >000f		00					Temp            .byte 0
 .f189						generateNew
 .f189		a9 02		lda #$02	                lda #2
-.f18b		20 5f f2	jsr $f25f	                jsr rnd.initGalois24o
+.f18b		20 5f f2	jsr $f25f	                jsr rnd.init
 .f18e		a9 3f		lda #$3f	                lda #<PlayFieldEnd-1
 .f190		85 0d		sta $0d		                sta PlayFieldAddr
 .f192		a9 e8		lda #$e8	                lda #>PlayFieldEnd-1
 .f194		85 0e		sta $0e		                sta PlayFieldAddr+1
 .f196		a2 40		ldx #$40	                ldx #64
 .f198						        loop
-.f198		20 68 f2	jsr $f268	                jsr rnd.generateGalois24o
+.f198		20 70 f2	jsr $f270	                jsr rnd.generate
 .f19b		64 0f		stz $0f		                stz Temp
 .f19d		92 0d		sta ($0d)	                sta (PlayFieldAddr)
 .f19f		8a		txa		                txa
@@ -4476,43 +4476,22 @@
 ;******  Processing input file: src/rnd.asm
 
 >0010						seed	.fill 4
-.f25f						initGalois24o
-.f25f		85 10		sta $10			sta seed
-.f261		85 11		sta $11			sta seed+1
-.f263		64 12		stz $12			stz seed+2
-.f265		64 13		stz $13			stz seed+3
-.f267		60		rts			rts
-.f268						generateGalois24o
-.f268		a4 11		ldy $11			ldy seed+1 ; will move to seed+2 at the end
-.f26a		a5 12		lda $12			lda seed+2
-.f26c		4a		lsr a			lsr
-.f26d		4a		lsr a			lsr
-.f26e		4a		lsr a			lsr
-.f26f		4a		lsr a			lsr
-.f270		85 11		sta $11			sta seed+1 ; reverse: %1011
-.f272		4a		lsr a			lsr
-.f273		4a		lsr a			lsr
-.f274		45 11		eor $11			eor seed+1
-.f276		4a		lsr a			lsr
-.f277		45 11		eor $11			eor seed+1
-.f279		45 10		eor $10			eor seed+0
-.f27b		85 11		sta $11			sta seed+1
-.f27d		a5 12		lda $12			lda seed+2
-.f27f		0a		asl a			asl
-.f280		45 12		eor $12			eor seed+2
-.f282		0a		asl a			asl
-.f283		0a		asl a			asl
-.f284		45 12		eor $12			eor seed+2
-.f286		0a		asl a			asl
-.f287		45 12		eor $12			eor seed+2
-.f289		84 12		sty $12			sty seed+2 ; finish rotating byte 1 into 2
-.f28b		85 10		sta $10			sta seed+0
-.f28d		4a		lsr a		        lsr a
-.f28e		4a		lsr a		        lsr a
-.f28f		4a		lsr a		        lsr a
-.f290		4a		lsr a		        lsr a
-.f291		4a		lsr a		        lsr a
-.f292		60		rts			rts
+.f25f						init
+.f25f		8d a4 d6	sta $d6a4	        sta vky.sysctrl.LFSR_DATA_LO       ; store seed
+.f262		8d a5 d6	sta $d6a5	        sta vky.sysctrl.LFSR_DATA_HI
+.f265		a9 02		lda #$02	        lda #vky.sysctrl.LFSR_SEED_WRITE
+.f267		8d a6 d6	sta $d6a6	        sta vky.sysctrl.LFSR_CTRL          ; toggle write
+.f26a		a9 01		lda #$01	        lda #vky.sysctrl.LFSR_ENABLE
+.f26c		8d a6 d6	sta $d6a6	        sta vky.sysctrl.LFSR_CTRL          ; enable
+.f26f		60		rts			rts
+.f270						generate
+.f270		ad a4 d6	lda $d6a4		lda $D6A4
+.f273		4a		lsr a		        lsr a
+.f274		4a		lsr a		        lsr a
+.f275		4a		lsr a		        lsr a
+.f276		4a		lsr a		        lsr a
+.f277		4a		lsr a		        lsr a
+.f278		60		rts			rts
 
 ;******  Processing input file: src/display.asm
 

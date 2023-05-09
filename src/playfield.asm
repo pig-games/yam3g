@@ -26,7 +26,7 @@ OFF_GEM_BELOW    = 8
 
 generateNew .proc
                 lda #2
-                jsr rnd.initGalois24o
+                jsr rnd.init
 
                 lda #<PlayFieldEnd-1
                 sta PlayFieldAddr
@@ -36,7 +36,7 @@ generateNew .proc
                 ldx #64
         loop
                 ; get random number
-                jsr rnd.generateGalois24o
+                jsr rnd.generate
                 stz Temp
                 ; store in current gem position
                 sta (PlayFieldAddr)
