@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.58.2974? listing file
 ; 64tass --long-address -b -fc -o build/YAM3G.bin --list build/YAM3G.lst --labels=build/YAM3G.lbl src/main.asm src/init.asm src/system.asm src/yam3g.asm src/playfield.asm src/rnd.asm src/display.asm src/audio.asm src/defs/interrupt.asm src/defs/tinyvicky.asm src/defs/io.asm src/textencoding.asm
-; Sat May  6 13:22:04 2023
+; Tue May  9 14:09:00 2023
 
 ;Offset	;PC	;Hex		;Monitor	;Source
 
@@ -4231,7 +4231,7 @@
 .f0c5		8d 0c d2	sta $d20c	                sta vky.tile.T1_CONTROL_REG  ; Enable Layer1
 .f0c8		8d 18 d2	sta $d218	                sta vky.tile.T2_CONTROL_REG  ; Enable Layer2
 .f0cb		20 89 f1	jsr $f189	                jsr playfield.generateNew
-.f0ce		20 22 f2	jsr $f222	                jsr playfield.updateTileMap
+.f0ce		20 0f f2	jsr $f20f	                jsr playfield.updateTileMap
 .f0d1		60		rts		                rts
 .f0d2						InterruptHandlerJoystick:
 .f0d2		a9 01		lda #$01	                lda #interrupt.JR0_INT00_SOF
@@ -4336,166 +4336,183 @@
 =8						PlayFieldYSize = 8
 =$40						HORIZONTAL_MATCH = %01000000
 =$80						VERTICAL_MATCH   = %10000000
-=1						OFF_GEM_MN       = 1
-=2						OFF_GEM_RIGHT    = 2
-=3						OFF_GEM_RIGHT_MN = 3
-=16						OFF_GEM_BELOW    = 16
-=17						OFF_GEM_BELOW_MN = 17
+=0						OFF_GEM_MN       = 0
+=1						OFF_GEM_RIGHT    = 1
+=8						OFF_GEM_BELOW    = 8
 >e800						        .align $100
->e800		00 00 00 00 00 00 00 00			PlayField       .fill 128,0
+>e800		00 00 00 00 00 00 00 00			PlayField       .fill 64,0
 >e808		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-;		...repeated 6 times (96 bytes)...
->e878		00 00 00 00 00 00 00 00
-.e880							PlayFieldEnd
+;		...repeated 2 times (32 bytes)...
+>e838		00 00 00 00 00 00 00 00
+.e840							PlayFieldEnd
 >000b							TileAddr        .fill 2
 >000d							PlayFieldAddr   .fill 2
 >000f		00					Temp            .byte 0
 .f189						generateNew
-.f189		a9 65		lda #$65	                lda #$65
-.f18b		8d a4 d6	sta $d6a4	                sta vky.sysctrl.LFSR_DATA_LO       ; store seed
-.f18e		8d a5 d6	sta $d6a5	                sta vky.sysctrl.LFSR_DATA_HI
-.f191		a9 02		lda #$02	                lda #vky.sysctrl.LFSR_SEED_WRITE
-.f193		8d a6 d6	sta $d6a6	                sta vky.sysctrl.LFSR_CTRL          ; toggle write
-.f196		a9 01		lda #$01	                lda #vky.sysctrl.LFSR_ENABLE
-.f198		8d a6 d6	sta $d6a6	                sta vky.sysctrl.LFSR_CTRL          ; enable
-.f19b		a9 7e		lda #$7e	                lda #<PlayFieldEnd-2
-.f19d		85 0d		sta $0d		                sta PlayFieldAddr
-.f19f		a9 e8		lda #$e8	                lda #>PlayFieldEnd
-.f1a1		85 0e		sta $0e		                sta PlayFieldAddr+1
-.f1a3		a2 40		ldx #$40	                ldx #64
-.f1a5						        loop
-.f1a5		20 74 f2	jsr $f274	                jsr rnd.generate
-.f1a8		64 0f		stz $0f		                stz Temp
-.f1aa		92 0d		sta ($0d)	                sta (PlayFieldAddr)
-.f1ac		8a		txa		                txa
-.f1ad		29 07		and #$07	                and #$7                           ; check if our counter (x) is a multiple of 8 so right most
-.f1af		f0 14		beq $f1c5	                beq checkVertical                 ; we still want to check for a vertical match below
-.f1b1		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
-.f1b3		a0 02		ldy #$02	                ldy #OFF_GEM_RIGHT
-.f1b5		d1 0d		cmp ($0d),y	                cmp (PlayFieldAddr),y
-.f1b7		d0 0c		bne $f1c5	                bne checkVertical                 ; no horizontal match so we check vertical
-.f1b9		a0 03		ldy #$03	                ldy #OFF_GEM_RIGHT_MN
-.f1bb		a9 40		lda #$40	                lda #HORIZONTAL_MATCH             ; bit indicating horizontal match between two gems
-.f1bd		85 0f		sta $0f		                sta Temp                          ; store for match processing, later on
-.f1bf		31 0d		and ($0d),y	                and (PlayFieldAddr),y
-.f1c1		f0 02		beq $f1c5	                beq checkVertical
-.f1c3		80 1e		bra $f1e3	                bra unmatchGem
-.f1c5						        checkVertical
-.f1c5		e0 39		cpx #$39	                cpx #57                           ; check if we're on the bottom row, if so, no vertical matching is needed
-.f1c7		90 04		bcc $f1cd	                bcc notBottomRow
-.f1c9		f0 49		beq $f214	                beq noMatch                       ; a still contains the horizontal match bit, if no horizontal match we're done
-.f1cb		80 25		bra $f1f2	                bra incMatchAmount                ; if >= 56, we're in the bottom row so no lower matches possible, but maybe horizontal
-.f1cd						        notBottomRow
-.f1cd		a0 10		ldy #$10	                ldy #OFF_GEM_BELOW
-.f1cf		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
-.f1d1		d1 0d		cmp ($0d),y	                cmp (PlayFieldAddr),y
-.f1d3		d0 1d		bne $f1f2	                bne incMatchAmount
-.f1d5		a0 11		ldy #$11	                ldy #OFF_GEM_BELOW_MN
-.f1d7		a9 80		lda #$80	                lda #VERTICAL_MATCH               ; bit indicating vertical match between two gems
-.f1d9		05 0f		ora $0f		                ora Temp
-.f1db		85 0f		sta $0f		                sta Temp                          ; store for match processing
-.f1dd		a9 80		lda #$80	                lda #VERTICAL_MATCH
-.f1df		31 0d		and ($0d),y	                and (PlayFieldAddr),y
-.f1e1		f0 0f		beq $f1f2	                beq incMatchAmount
-.f1e3						        unmatchGem
-.f1e3		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
-.f1e5		1a		inc a		                inc a                         ; increase gem number to no long match
-.f1e6		29 07		and #$07	                and #7                        ; roll-over if needed
-.f1e8		92 0d		sta ($0d)	                sta (PlayFieldAddr)           ; store new gem value
-.f1ea		a9 00		lda #$00	                lda #0
-.f1ec		a0 01		ldy #$01	                ldy #OFF_GEM_MN
-.f1ee		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f1f0		80 28		bra $f21a	                bra endMatching
-.f1f2						        incMatchAmount
-.f1f2		a0 01		ldy #$01	                ldy #OFF_GEM_MN
-.f1f4		a5 0f		lda $0f		                lda Temp
-.f1f6		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f1f8		89 40		bit #$40	                bit #HORIZONTAL_MATCH
-.f1fa		f0 08		beq $f204	                beq verticalMatch
-.f1fc		a0 03		ldy #$03	                ldy #OFF_GEM_RIGHT_MN
-.f1fe		a9 40		lda #$40	                lda #HORIZONTAL_MATCH
-.f200		11 0d		ora ($0d),y	                ora (PlayFieldAddr),y
-.f202		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f204						        verticalMatch
-.f204		a5 0f		lda $0f		                lda Temp
-.f206		89 80		bit #$80	                bit #VERTICAL_MATCH
-.f208		f0 10		beq $f21a	                beq endMatching
-.f20a		a0 11		ldy #$11	                ldy #OFF_GEM_BELOW_MN
-.f20c		a9 80		lda #$80	                lda #VERTICAL_MATCH
-.f20e		11 0d		ora ($0d),y	                ora (PlayFieldAddr),y
-.f210		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f212		80 06		bra $f21a	                bra endMatching
-.f214						        noMatch
-.f214		a9 00		lda #$00	                lda #0
-.f216		a0 01		ldy #$01	                ldy #OFF_GEM_MN
-.f218		91 0d		sta ($0d),y	                sta (PlayfieldAddr),y
-.f21a						        endMatching
-.f21a		c6 0d		dec $0d		                dec PlayFieldAddr
-.f21c		c6 0d		dec $0d		                dec PlayFieldAddr
-.f21e		ca		dex		                dex
-.f21f		d0 84		bne $f1a5	                bne loop
-.f221		60		rts			rts
-.f222						updateTileMap
-.f222		a9 80		lda #$80			lda #$80
-.f224		85 00		sta $00				sta $00
-.f226		a5 09		lda $09				lda $08+$1
-.f228		48		pha				pha
-.f229		a9 08		lda #$08	                lda #8
-.f22b		85 09		sta $09		                sta $08+$1
-.f22d		64 00		stz $00				stz $00
-.f22f		a9 00		lda #$00	                lda #<PlayField
-.f231		85 0d		sta $0d		                sta PlayFieldAddr
-.f233		a9 e8		lda #$e8	                lda #>PlayField
-.f235		85 0e		sta $0e		                sta PlayFieldAddr+1
-.f237		a9 b6		lda #$b6	                lda #(8*TileMapXSize)+14
-.f239		85 0b		sta $0b		                sta TileAddr
-.f23b		a9 25		lda #$25	                lda #$25
-.f23d		85 0c		sta $0c		                sta TileAddr+1
-.f23f		a2 08		ldx #$08	                ldx #8
-.f241						        rowLoop
-.f241		a0 00		ldy #$00	                ldy #0
-.f243						        colLoop
-.f243		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
+.f189		a9 02		lda #$02	                lda #2
+.f18b		20 5f f2	jsr $f25f	                jsr rnd.initGalois24o
+.f18e		a9 3f		lda #$3f	                lda #<PlayFieldEnd-1
+.f190		85 0d		sta $0d		                sta PlayFieldAddr
+.f192		a9 e8		lda #$e8	                lda #>PlayFieldEnd-1
+.f194		85 0e		sta $0e		                sta PlayFieldAddr+1
+.f196		a2 40		ldx #$40	                ldx #64
+.f198						        loop
+.f198		20 68 f2	jsr $f268	                jsr rnd.generateGalois24o
+.f19b		64 0f		stz $0f		                stz Temp
+.f19d		92 0d		sta ($0d)	                sta (PlayFieldAddr)
+.f19f		8a		txa		                txa
+.f1a0		29 07		and #$07	                and #$7                           ; check if our counter (x) is a multiple of 8 so right most
+.f1a2		f0 14		beq $f1b8	                beq checkVertical                 ; we still want to check for a vertical match below
+.f1a4		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
+.f1a6		a0 01		ldy #$01	                ldy #OFF_GEM_RIGHT
+.f1a8		51 0d		eor ($0d),y	                eor (PlayFieldAddr),y
+.f1aa		29 07		and #$07	                and #7
+.f1ac		d0 0a		bne $f1b8	                bne checkVertical                 ; no horizontal match so we check vertical
+.f1ae		a9 40		lda #$40	                lda #HORIZONTAL_MATCH             ; bit indicating horizontal match between two gems
+.f1b0		85 0f		sta $0f		                sta Temp                          ; store for match processing, later on
+.f1b2		31 0d		and ($0d),y	                and (PlayFieldAddr),y
+.f1b4		f0 02		beq $f1b8	                beq checkVertical
+.f1b6		80 20		bra $f1d8	                bra unmatchGem
+.f1b8						        checkVertical
+.f1b8		e0 39		cpx #$39	                cpx #57                           ; check if we're on the bottom row, if so, no vertical matching is needed
+.f1ba		90 06		bcc $f1c2	                bcc notBottomRow
+.f1bc		a5 0f		lda $0f		                lda Temp
+.f1be		f0 43		beq $f203	                beq noMatch                       ; a still contains the horizontal match bit, if no horizontal match we're done
+.f1c0		80 1f		bra $f1e1	                bra incMatchAmount                ; if >= 56, we're in the bottom row so no lower matches possible, but maybe horizontal
+.f1c2						        notBottomRow
+.f1c2		a0 08		ldy #$08	                ldy #OFF_GEM_BELOW
+.f1c4		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
+.f1c6		51 0d		eor ($0d),y	                eor (PlayFieldAddr),y
+.f1c8		29 07		and #$07	                and #7
+.f1ca		d0 15		bne $f1e1	                bne incMatchAmount
+.f1cc		a9 80		lda #$80	                lda #VERTICAL_MATCH               ; bit indicating vertical match between two gems
+.f1ce		05 0f		ora $0f		                ora Temp
+.f1d0		85 0f		sta $0f		                sta Temp                          ; store for match processing
+.f1d2		a9 80		lda #$80	                lda #VERTICAL_MATCH
+.f1d4		31 0d		and ($0d),y	                and (PlayFieldAddr),y
+.f1d6		f0 09		beq $f1e1	                beq incMatchAmount
+.f1d8						        unmatchGem
+.f1d8		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
+.f1da		1a		inc a		                inc a                         ; increase gem number to no long match
+.f1db		29 07		and #$07	                and #7                        ; roll-over if needed
+.f1dd		92 0d		sta ($0d)	                sta (PlayFieldAddr)
+.f1df		80 28		bra $f209	                bra endMatching
+.f1e1						        incMatchAmount
+.f1e1		a5 0f		lda $0f		                lda Temp
+.f1e3		12 0d		ora ($0d)	                ora (PlayFieldAddr)
+.f1e5		92 0d		sta ($0d)	                sta (PlayFieldAddr)
+.f1e7		89 40		bit #$40	                bit #HORIZONTAL_MATCH
+.f1e9		f0 08		beq $f1f3	                beq verticalMatch
+.f1eb		a9 40		lda #$40	                lda #HORIZONTAL_MATCH
+.f1ed		a0 01		ldy #$01	                ldy #OFF_GEM_RIGHT
+.f1ef		11 0d		ora ($0d),y	                ora (PlayFieldAddr),y
+.f1f1		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
+.f1f3						        verticalMatch
+.f1f3		a5 0f		lda $0f		                lda Temp
+.f1f5		89 80		bit #$80	                bit #VERTICAL_MATCH
+.f1f7		f0 10		beq $f209	                beq endMatching
+.f1f9		a0 08		ldy #$08	                ldy #OFF_GEM_BELOW
+.f1fb		a9 80		lda #$80	                lda #VERTICAL_MATCH
+.f1fd		11 0d		ora ($0d),y	                ora (PlayFieldAddr),y
+.f1ff		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
+.f201		80 06		bra $f209	                bra endMatching
+.f203						        noMatch
+.f203		a9 3f		lda #$3f	                lda #~(VERTICAL_MATCH | HORIZONTAL_MATCH)
+.f205		32 0d		and ($0d)	                and (PlayFieldAddr)
+.f207		92 0d		sta ($0d)	                sta (PlayfieldAddr)
+.f209						        endMatching
+.f209		c6 0d		dec $0d		                dec PlayFieldAddr
+.f20b		ca		dex		                dex
+.f20c		d0 8a		bne $f198	                bne loop
+.f20e		60		rts			rts
+.f20f						updateTileMap
+.f20f		a9 80		lda #$80			lda #$80
+.f211		85 00		sta $00				sta $00
+.f213		a5 09		lda $09				lda $08+$1
+.f215		48		pha				pha
+.f216		a9 08		lda #$08	                lda #8
+.f218		85 09		sta $09		                sta $08+$1
+.f21a		64 00		stz $00				stz $00
+.f21c		a9 00		lda #$00	                lda #<PlayField
+.f21e		85 0d		sta $0d		                sta PlayFieldAddr
+.f220		a9 e8		lda #$e8	                lda #>PlayField
+.f222		85 0e		sta $0e		                sta PlayFieldAddr+1
+.f224		a9 b6		lda #$b6	                lda #(8*TileMapXSize)+14
+.f226		85 0b		sta $0b		                sta TileAddr
+.f228		a9 25		lda #$25	                lda #$25
+.f22a		85 0c		sta $0c		                sta TileAddr+1
+.f22c		a2 08		ldx #$08	                ldx #8
+.f22e						        rowLoop
+.f22e		a0 00		ldy #$00	                ldy #0
+.f230						        colLoop
+.f230		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
+.f232		29 07		and #$07	                and #7
+.f234		18		clc		                clc
+.f235		69 50		adc #$50	                adc #80
+.f237		91 0b		sta ($0b),y	                sta (TileAddr),y
+.f239		a9 00		lda #$00	                lda #0
+.f23b		c8		iny		                iny
+.f23c		91 0b		sta ($0b),y	                sta (TileAddr),y
+.f23e		e6 0d		inc $0d		                inc PlayFieldAddr
+.f240		c8		iny		                iny
+.f241		c0 10		cpy #$10	                cpy #16
+.f243		d0 eb		bne $f230	                bne colLoop
 .f245		18		clc		                clc
-.f246		69 50		adc #$50	                adc #80
-.f248		91 0b		sta ($0b),y	                sta (TileAddr),y
-.f24a		a9 00		lda #$00	                lda #0
-.f24c		c8		iny		                iny
-.f24d		91 0b		sta ($0b),y	                sta (TileAddr),y
-.f24f		88		dey		                dey
-.f250		e6 0d		inc $0d		                inc PlayFieldAddr
-.f252		e6 0d		inc $0d		                inc PlayFieldAddr
-.f254		c8		iny		                iny
-.f255		c8		iny		                iny
-.f256		c0 10		cpy #$10	                cpy #16
-.f258		d0 e9		bne $f243	                bne colLoop
-.f25a		18		clc		                clc
-.f25b		a5 0b		lda $0b		                lda TileAddr
-.f25d		69 2a		adc #$2a	                adc #42
-.f25f		85 0b		sta $0b		                sta TileAddr
-.f261		a5 0c		lda $0c		                lda TileAddr+1
-.f263		69 00		adc #$00	                adc #0
-.f265		85 0c		sta $0c		                sta TileAddr+1
-.f267		ca		dex		                dex
-.f268		d0 d7		bne $f241	                bne rowLoop
-.f26a		a9 80		lda #$80			lda #$80
-.f26c		85 00		sta $00				sta $00
-.f26e		68		pla				pla
-.f26f		85 09		sta $09				sta $08+$1
-.f271		64 00		stz $00				stz $00
-.f273		60		rts			rts
+.f246		a5 0b		lda $0b		                lda TileAddr
+.f248		69 2a		adc #$2a	                adc #42
+.f24a		85 0b		sta $0b		                sta TileAddr
+.f24c		a5 0c		lda $0c		                lda TileAddr+1
+.f24e		69 00		adc #$00	                adc #0
+.f250		85 0c		sta $0c		                sta TileAddr+1
+.f252		ca		dex		                dex
+.f253		d0 d9		bne $f22e	                bne rowLoop
+.f255		a9 80		lda #$80			lda #$80
+.f257		85 00		sta $00				sta $00
+.f259		68		pla				pla
+.f25a		85 09		sta $09				sta $08+$1
+.f25c		64 00		stz $00				stz $00
+.f25e		60		rts			rts
 
 ;******  Processing input file: src/rnd.asm
 
 >0010						seed	.fill 4
-.f274						generate
-.f274		ad a4 d6	lda $d6a4		lda $D6A4
-.f277		4a		lsr a		        lsr a
-.f278		4a		lsr a		        lsr a
-.f279		4a		lsr a		        lsr a
-.f27a		4a		lsr a		        lsr a
-.f27b		4a		lsr a		        lsr a
-.f27c		60		rts			rts
+.f25f						initGalois24o
+.f25f		85 10		sta $10			sta seed
+.f261		85 11		sta $11			sta seed+1
+.f263		64 12		stz $12			stz seed+2
+.f265		64 13		stz $13			stz seed+3
+.f267		60		rts			rts
+.f268						generateGalois24o
+.f268		a4 11		ldy $11			ldy seed+1 ; will move to seed+2 at the end
+.f26a		a5 12		lda $12			lda seed+2
+.f26c		4a		lsr a			lsr
+.f26d		4a		lsr a			lsr
+.f26e		4a		lsr a			lsr
+.f26f		4a		lsr a			lsr
+.f270		85 11		sta $11			sta seed+1 ; reverse: %1011
+.f272		4a		lsr a			lsr
+.f273		4a		lsr a			lsr
+.f274		45 11		eor $11			eor seed+1
+.f276		4a		lsr a			lsr
+.f277		45 11		eor $11			eor seed+1
+.f279		45 10		eor $10			eor seed+0
+.f27b		85 11		sta $11			sta seed+1
+.f27d		a5 12		lda $12			lda seed+2
+.f27f		0a		asl a			asl
+.f280		45 12		eor $12			eor seed+2
+.f282		0a		asl a			asl
+.f283		0a		asl a			asl
+.f284		45 12		eor $12			eor seed+2
+.f286		0a		asl a			asl
+.f287		45 12		eor $12			eor seed+2
+.f289		84 12		sty $12			sty seed+2 ; finish rotating byte 1 into 2
+.f28b		85 10		sta $10			sta seed+0
+.f28d		4a		lsr a		        lsr a
+.f28e		4a		lsr a		        lsr a
+.f28f		4a		lsr a		        lsr a
+.f290		4a		lsr a		        lsr a
+.f291		4a		lsr a		        lsr a
+.f292		60		rts			rts
 
 ;******  Processing input file: src/display.asm
 
@@ -4529,13 +4546,13 @@
 .e110		60		rts		            	rts
 .e111						initTextLUT
 .e111		a2 00		ldx #$00			ldx #$00
-.e113		bd 80 e8	lda $e880,x	loop0		lda FgColorLut,x		; get Local Data
+.e113		bd 40 e8	lda $e840,x	loop0		lda FgColorLut,x		; get Local Data
 .e116		9d 00 d8	sta $d800,x	                sta system.TEXT_LUT_FG,x	; Write in LUT Memory
 .e119		e8		inx		                inx
 .e11a		e0 40		cpx #$40	                cpx #$40
 .e11c		d0 f5		bne $e113	                bne loop0
 .e11e		a2 00		ldx #$00	                ldx #$00
-.e120		bd c0 e8	lda $e8c0,x	loop1		lda BgColorLut,x		; get Local Data
+.e120		bd 80 e8	lda $e880,x	loop1		lda BgColorLut,x		; get Local Data
 .e123		9d 40 d8	sta $d840,x	                sta system.TEXT_LUT_BG,x	; Write in LUT Memory
 .e126		e8		inx		                inx
 .e127		e0 40		cpx #$40	                cpx #$40
@@ -4584,9 +4601,9 @@
 .e16a		85 20		sta $20		                sta $20
 .e16c		a9 c0		lda #$c0	                lda #$C0
 .e16e		85 21		sta $21		                sta $21
-.e170		a9 00		lda #$00	                lda #<Text2Display
+.e170		a9 c0		lda #$c0	                lda #<Text2Display
 .e172		85 22		sta $22		                sta $22
-.e174		a9 e9		lda #$e9	                lda #>Text2Display
+.e174		a9 e8		lda #$e8	                lda #>Text2Display
 .e176		85 23		sta $23		                sta $23
 .e178						printText
 .e178		a0 00		ldy #$00	                ldy #$00
@@ -4603,66 +4620,66 @@
 .e18b		d0 ed		bne $e17a	                bne loopY
 .e18d						endSplash
 .e18d		60		rts		                rts
->e880						.align 16
-.e880						FgColorLut
->e880		00 00 00 ff					.text $00, $00, $00, $FF
->e884		00 00 80 ff			                .text $00, $00, $80, $FF
+>e840						.align 16
+.e840						FgColorLut
+>e840		00 00 00 ff					.text $00, $00, $00, $FF
+>e844		00 00 80 ff			                .text $00, $00, $80, $FF
+>e848		00 80 00 ff			                .text $00, $80, $00, $FF
+>e84c		80 00 00 ff			                .text $80, $00, $00, $FF
+>e850		00 80 80 ff			                .text $00, $80, $80, $FF
+>e854		80 80 00 ff			                .text $80, $80, $00, $FF
+>e858		80 00 80 ff			                .text $80, $00, $80, $FF
+>e85c		80 80 80 ff			                .text $80, $80, $80, $FF
+>e860		00 45 ff ff			                .text $00, $45, $FF, $FF
+>e864		13 45 8b ff			                .text $13, $45, $8B, $FF
+>e868		00 00 20 ff			                .text $00, $00, $20, $FF
+>e86c		00 20 00 ff			                .text $00, $20, $00, $FF
+>e870		20 00 00 ff			                .text $20, $00, $00, $FF
+>e874		20 20 20 ff			                .text $20, $20, $20, $FF
+>e878		ff 80 00 ff			                .text $FF, $80, $00, $FF
+>e87c		ff ff ff ff			                .text $FF, $FF, $FF, $FF
+.e880						BgColorLut
+>e880		00 00 00 ff					.text $00, $00, $00, $FF  ;BGRA
+>e884		aa 00 00 ff			                .text $AA, $00, $00, $FF
 >e888		00 80 00 ff			                .text $00, $80, $00, $FF
->e88c		80 00 00 ff			                .text $80, $00, $00, $FF
->e890		00 80 80 ff			                .text $00, $80, $80, $FF
->e894		80 80 00 ff			                .text $80, $80, $00, $FF
->e898		80 00 80 ff			                .text $80, $00, $80, $FF
->e89c		80 80 80 ff			                .text $80, $80, $80, $FF
->e8a0		00 45 ff ff			                .text $00, $45, $FF, $FF
+>e88c		00 00 80 ff			                .text $00, $00, $80, $FF
+>e890		00 20 20 ff			                .text $00, $20, $20, $FF
+>e894		20 20 00 ff			                .text $20, $20, $00, $FF
+>e898		20 00 20 ff			                .text $20, $00, $20, $FF
+>e89c		20 20 20 ff			                .text $20, $20, $20, $FF
+>e8a0		1e 69 d2 ff			                .text $1E, $69, $D2, $FF
 >e8a4		13 45 8b ff			                .text $13, $45, $8B, $FF
 >e8a8		00 00 20 ff			                .text $00, $00, $20, $FF
 >e8ac		00 20 00 ff			                .text $00, $20, $00, $FF
->e8b0		20 00 00 ff			                .text $20, $00, $00, $FF
->e8b4		20 20 20 ff			                .text $20, $20, $20, $FF
->e8b8		ff 80 00 ff			                .text $FF, $80, $00, $FF
+>e8b0		40 00 00 ff			                .text $40, $00, $00, $FF
+>e8b4		10 10 10 ff			                .text $10, $10, $10, $FF
+>e8b8		40 40 40 ff			                .text $40, $40, $40, $FF
 >e8bc		ff ff ff ff			                .text $FF, $FF, $FF, $FF
-.e8c0						BgColorLut
->e8c0		00 00 00 ff					.text $00, $00, $00, $FF  ;BGRA
->e8c4		aa 00 00 ff			                .text $AA, $00, $00, $FF
->e8c8		00 80 00 ff			                .text $00, $80, $00, $FF
->e8cc		00 00 80 ff			                .text $00, $00, $80, $FF
->e8d0		00 20 20 ff			                .text $00, $20, $20, $FF
->e8d4		20 20 00 ff			                .text $20, $20, $00, $FF
->e8d8		20 00 20 ff			                .text $20, $00, $20, $FF
->e8dc		20 20 20 ff			                .text $20, $20, $20, $FF
->e8e0		1e 69 d2 ff			                .text $1E, $69, $D2, $FF
->e8e4		13 45 8b ff			                .text $13, $45, $8B, $FF
->e8e8		00 00 20 ff			                .text $00, $00, $20, $FF
->e8ec		00 20 00 ff			                .text $00, $20, $00, $FF
->e8f0		40 00 00 ff			                .text $40, $00, $00, $FF
->e8f4		10 10 10 ff			                .text $10, $10, $10, $FF
->e8f8		40 40 40 ff			                .text $40, $40, $40, $FF
->e8fc		ff ff ff ff			                .text $FF, $FF, $FF, $FF
->e900						.align 16
->e900		20 20 20 20 20 20 20 20		Text2Display    .text "                                                                                "
->e908		20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
+>e8c0						.align 16
+>e8c0		20 20 20 20 20 20 20 20		Text2Display    .text "                                                                                "
+>e8c8		20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
 ;		...repeated 3 times (48 bytes)...
->e948		20 20 20 20 20 20 20 20
->e950		20 20 20 20 20 20 20 20		                .text "                ****         F256 Jr Showcase          ****                     "
->e958		20 20 20 20 20 20 20 20 2a 2a 2a 2a 20 20 20 20
->e968		20 20 20 20 20 46 32 35 36 20 4a 72 20 53 68 6f
->e978		77 63 61 73 65 20 20 20 20 20 20 20 20 20 20 2a
->e988		2a 2a 2a 20 20 20 20 20 20 20 20 20 20 20 20 20
->e998		20 20 20 20 20 20 20 20
->e9a0		00				                .text $00
->e9a1		54 48 45 20 50 53 32 20		FailedKbd       .text "THE PS2 INIT FAILED", $00
->e9a9		49 4e 49 54 20 46 41 49 4c 45 44 00
->e9b5		54 48 45 20 50 53 32 20		SuccessKbd      .text "THE PS2 INIT SUCCEEDED", $00
->e9bd		49 4e 49 54 20 53 55 43 43 45 45 44 45 44 00
->e9cc		54 48 45 20 53 44 43 41		FailedSDC       .text "THE SDCARD FAILED", $00
->e9d4		52 44 20 46 41 49 4c 45 44 00
->e9de		54 48 45 20 53 44 43 41		SuccessSDC      .text "THE SDCARD INIT... SUCCESS", $00
->e9e6		52 44 20 49 4e 49 54 2e 2e 2e 20 53 55 43 43 45
->e9f6		53 53 00
->e9f9		4e 3a 43 32 35 36 4a 52		Format          .text "N:C256JR,S", $00, "A"
->ea01		2c 53 00 41
->ea05		30 31 32 33 34 35 36 37		HEX             .text "0123456789", $01, $02, $03, $04, $05, $00
->ea0d		38 39 01 02 03 04 05 00
+>e908		20 20 20 20 20 20 20 20
+>e910		20 20 20 20 20 20 20 20		                .text "                ****         F256 Jr Showcase          ****                     "
+>e918		20 20 20 20 20 20 20 20 2a 2a 2a 2a 20 20 20 20
+>e928		20 20 20 20 20 46 32 35 36 20 4a 72 20 53 68 6f
+>e938		77 63 61 73 65 20 20 20 20 20 20 20 20 20 20 2a
+>e948		2a 2a 2a 20 20 20 20 20 20 20 20 20 20 20 20 20
+>e958		20 20 20 20 20 20 20 20
+>e960		00				                .text $00
+>e961		54 48 45 20 50 53 32 20		FailedKbd       .text "THE PS2 INIT FAILED", $00
+>e969		49 4e 49 54 20 46 41 49 4c 45 44 00
+>e975		54 48 45 20 50 53 32 20		SuccessKbd      .text "THE PS2 INIT SUCCEEDED", $00
+>e97d		49 4e 49 54 20 53 55 43 43 45 45 44 45 44 00
+>e98c		54 48 45 20 53 44 43 41		FailedSDC       .text "THE SDCARD FAILED", $00
+>e994		52 44 20 46 41 49 4c 45 44 00
+>e99e		54 48 45 20 53 44 43 41		SuccessSDC      .text "THE SDCARD INIT... SUCCESS", $00
+>e9a6		52 44 20 49 4e 49 54 2e 2e 2e 20 53 55 43 43 45
+>e9b6		53 53 00
+>e9b9		4e 3a 43 32 35 36 4a 52		Format          .text "N:C256JR,S", $00, "A"
+>e9c1		2c 53 00 41
+>e9c5		30 31 32 33 34 35 36 37		HEX             .text "0123456789", $01, $02, $03, $04, $05, $00
+>e9cd		38 39 01 02 03 04 05 00
 
 ;******  Processing input file: src/audio.asm
 

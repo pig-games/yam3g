@@ -6,15 +6,13 @@ PlayFieldYSize = 8
 
 HORIZONTAL_MATCH = %01000000
 VERTICAL_MATCH   = %10000000
-OFF_GEM_MN       = 1
-OFF_GEM_RIGHT    = 2
-OFF_GEM_RIGHT_MN = 3
-OFF_GEM_BELOW    = 16
-OFF_GEM_BELOW_MN = 17
+OFF_GEM_MN       = 0
+OFF_GEM_RIGHT    = 1
+OFF_GEM_BELOW    = 8
 
 .section data
         .align $100
-	PlayField       .fill 128,0
+	PlayField       .fill 64,0
 	PlayFieldEnd
 .endsection
 
@@ -27,25 +25,22 @@ OFF_GEM_BELOW_MN = 17
 .section yam3g
 
 generateNew .proc
-                lda #$65
-                sta vky.sysctrl.LFSR_DATA_LO       ; store seed
-                sta vky.sysctrl.LFSR_DATA_HI
-                lda #vky.sysctrl.LFSR_SEED_WRITE
-                sta vky.sysctrl.LFSR_CTRL          ; toggle write
-                lda #vky.sysctrl.LFSR_ENABLE
-                sta vky.sysctrl.LFSR_CTRL          ; enable
-                lda #<PlayFieldEnd-2
+                lda #2
+                jsr rnd.initGalois24o
+
+                lda #<PlayFieldEnd-1
                 sta PlayFieldAddr
-                lda #>PlayFieldEnd
+                lda #>PlayFieldEnd-1
                 sta PlayFieldAddr+1
 
                 ldx #64
         loop
                 ; get random number
-                jsr rnd.generate
+                jsr rnd.generateGalois24o
                 stz Temp
                 ; store in current gem position
                 sta (PlayFieldAddr)
+                ; jmp endMatching
                 ; check for right most position, no gem to check to the right...
                 txa
                 and #$7                           ; check if our counter (x) is a multiple of 8 so right most
@@ -53,10 +48,10 @@ generateNew .proc
                 ; restore gem number and check for match with gem to the right
                 lda (PlayFieldAddr)
                 ldy #OFF_GEM_RIGHT
-                cmp (PlayFieldAddr),y
+                eor (PlayFieldAddr),y
+                and #7
                 bne checkVertical                 ; no horizontal match so we check vertical
                 ; check for match amount for gem to the right
-                ldy #OFF_GEM_RIGHT_MN
                 lda #HORIZONTAL_MATCH             ; bit indicating horizontal match between two gems
                 sta Temp                          ; store for match processing, later on
                 and (PlayFieldAddr),y
@@ -65,14 +60,15 @@ generateNew .proc
         checkVertical
                 cpx #57                           ; check if we're on the bottom row, if so, no vertical matching is needed
                 bcc notBottomRow
+                lda Temp
                 beq noMatch                       ; a still contains the horizontal match bit, if no horizontal match we're done
                 bra incMatchAmount                ; if >= 56, we're in the bottom row so no lower matches possible, but maybe horizontal
         notBottomRow
                 ldy #OFF_GEM_BELOW
                 lda (PlayFieldAddr)
-                cmp (PlayFieldAddr),y
+                eor (PlayFieldAddr),y
+                and #7
                 bne incMatchAmount
-                ldy #OFF_GEM_BELOW_MN
                 lda #VERTICAL_MATCH               ; bit indicating vertical match between two gems
                 ora Temp
                 sta Temp                          ; store for match processing
@@ -84,40 +80,35 @@ generateNew .proc
                 lda (PlayFieldAddr)
                 inc a                         ; increase gem number to no long match
                 and #7                        ; roll-over if needed
-                sta (PlayFieldAddr)           ; store new gem value
-                ; set current gem match amount to 0
-                lda #0
-                ldy #OFF_GEM_MN
-                sta (PlayFieldAddr),y
+                sta (PlayFieldAddr)
                 bra endMatching                
         incMatchAmount
                 ; our match with the right neighbour is isolated, so we set involved match gem's amounts to 1
-                ldy #OFF_GEM_MN
                 lda Temp
-                sta (PlayFieldAddr),y
+                ora (PlayFieldAddr)
+                sta (PlayFieldAddr)
                 bit #HORIZONTAL_MATCH
                 beq verticalMatch
-                ldy #OFF_GEM_RIGHT_MN
                 lda #HORIZONTAL_MATCH
+                ldy #OFF_GEM_RIGHT
                 ora (PlayFieldAddr),y
                 sta (PlayFieldAddr),y
         verticalMatch
                 lda Temp
                 bit #VERTICAL_MATCH
                 beq endMatching
-                ldy #OFF_GEM_BELOW_MN
+                ldy #OFF_GEM_BELOW
                 lda #VERTICAL_MATCH
                 ora (PlayFieldAddr),y
                 sta (PlayFieldAddr),y
                 bra endMatching
         noMatch
                 ; no match we set the current gem's match amount to 0
-                lda #0
-                ldy #OFF_GEM_MN
-                sta (PlayfieldAddr),y
+                lda #~(VERTICAL_MATCH | HORIZONTAL_MATCH)
+                and (PlayFieldAddr)
+                sta (PlayfieldAddr)
         endMatching
                 ; we're done matching let's do next gem
-                dec PlayFieldAddr
                 dec PlayFieldAddr
                 dex
                 bne loop
@@ -142,16 +133,14 @@ updateTileMap .proc
                 ldy #0
         colLoop
                 lda (PlayFieldAddr)
+                and #7
                 clc
                 adc #80
                 sta (TileAddr),y
                 lda #0
                 iny
                 sta (TileAddr),y
-                dey
                 inc PlayFieldAddr
-                inc PlayFieldAddr
-                iny
                 iny
                 cpy #16
                 bne colLoop
