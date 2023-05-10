@@ -190,7 +190,7 @@ checkHorizontalMatch .proc
                 rts
 noMatch
                 sec                               ; set c to indicate no match
-                rts
+        rts
 .endproc
 
 ;********************************************************************************
@@ -227,7 +227,7 @@ checkVerticalMatch .proc
                 rts
 noMatch
                 sec                               ; set c to indicate no match
-                rts
+        rts
 .endproc
 
 ;********************************************************************************
