@@ -25,7 +25,6 @@ SRC = 	src/main.asm \
 BINS =  tile_data/tileset.bin \
   	    tile_data/tileset.pal.bin		
 
-
 MAPS =  tile_data/layer1.txm \
 		tile_data/layer2.txm \
 		tile_data/layer3.txm

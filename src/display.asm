@@ -2,33 +2,11 @@ display		.namespace
 .section 	display
 
 tinyVkyInit
-            	lda #vky.mctrl.TEXT_MODE_EN;
-            	sta vky.mctrl.REG_L
-            	lda vky.mctrl.REG_L
-            	lda #vky.border.CTRL_ENABLE
-            	sta vky.border.CTRL_REG
-            	lda #$FF ;AAFFEE
-            	sta vky.border.COLOR_B
-            	lda #$88 ;AAFFEE
-            	sta vky.border.COLOR_G           
-            	lda #$00
-            	sta vky.border.COLOR_R
-            	lda #16
-            	sta vky.border.X_SIZE
-            	sta vky.border.Y_SIZE
-            	lda #0 ;vky.cursor.ENABLE | vky.cursor.TURNOFF_FLASH
-            	sta vky.cursor.TXT_CTRL_REG
-            	lda #7
-            	sta vky.cursor.TXT_CHAR_REG
-            	lda #28
-            	sta vky.cursor.TXT_COLR_REG
-            	lda #0
-            	sta vky.cursor.TXT_X_REG_L
-            	sta vky.cursor.TXT_X_REG_H
-            	sta vky.cursor.TXT_Y_REG_H
-            	lda #6
-            	sta vky.cursor.TXT_Y_REG_L
+            	stz vky.mctrl.REG_L
             	rts
+initCursor	.proc
+		 
+.endproc
 
 initTextLUT     .block
 		ldx #$00

@@ -52,9 +52,14 @@ TileMapLayer2 = $011000
 * = TileMapLayer2
 		.dsection tilelayer2
 
-TileSet0Data =  $011500
+SpriteData =    $011500
+* = SpriteData
+		.dsection spritedata
+
+TileSet0Data =  $012500
 * = TileSet0Data
 		.dsection tilesetdata
+
 
 .section	music
 	.binary "../music/odeto64.bin"

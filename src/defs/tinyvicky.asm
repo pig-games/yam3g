@@ -207,13 +207,19 @@ xymath        .namespace
 
 ; Sprite Block0
 sprite        .namespace
-        CTRL_ENABLE = $01
-        LUT0        = $02
-        LUT1        = $04
-        DEPTH0      = $08    ; 00 = Total Front - 01 = In between L0 and L1, 10 = In between L1 and L2, 11 = Total Back
-        DEPTH1      = $10
-        SIZE0       = $20    ; 00 = 32x32 - 01 = 24x24 - 10 = 16x16 - 11 = 8x8
-        SIZE1       = $40
+        ENABLE      = $01
+        LUT0        = %00000000
+        LUT1        = %00000010
+        LUT2        = %00000100
+        LUT3        = %00000110
+        DEPTH_L3    = %00000000
+        DEPTH_L2    = %00001000
+        DEPTH_L1    = %00010000
+        DEPTH_L0    = %00011000
+        SIZE_32     = %00000000
+        SIZE_24     = %00100000
+        SIZE_16     = %01000000
+        SIZE_8      = %01100000
         
         SP0_Ctrl           = $D900
         SP0_Addy_L         = $D901

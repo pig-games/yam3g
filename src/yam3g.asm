@@ -25,6 +25,10 @@ musicPlay = Music + 3
           .binary "../tile_data/tileset.bin"
 .send
 
+.section spritedata
+          .binary "../tile_data/cursor.bin"
+.send
+
 .section tilesetpalette
         TileMapPalette	     .binary "../tile_data/tileset.pal.bin"
 .send
@@ -38,9 +42,9 @@ musicPlay = Music + 3
         L1ScrollXH      .byte 0
         L2ScrollXL      .byte 0
         L2ScrollXH      .byte 0
-        L2VXLO          .byte 0
-        L2VXHI          .byte 0
-        L2SLINE         .byte 0
+        JoyWait         .byte 0        
+        CurPosX         .byte 0
+        CurPosY         .byte 0
 .send
 
 .section        yam3g
@@ -149,128 +153,89 @@ setLUT0_4_Tiles2
                 sta vky.tile.T0_CONTROL_REG  ; Enable Layer0
                 sta vky.tile.T1_CONTROL_REG  ; Enable Layer1
                 sta vky.tile.T2_CONTROL_REG  ; Enable Layer2
-
+                jsr playfield.initCursor
                 ; generate random tiles for map 1
                 jsr playfield.generateNew
                 jsr playfield.updateTileMap
                 rts
 
-InterruptHandlerJoystick:
+InterruptHandlerJoystick .block
 
                 ; Clear Interrupt Pending Register for SOF
                 lda #interrupt.JR0_INT00_SOF
                 bit interrupt.PENDING_REG0
-                beq +
+                beq done
                 sta interrupt.PENDING_REG0
                 jsr musicPlay
-
+                lda JoyWait
+                beq +
+                dec JoyWait
+                bra done
+        +
+                lda #8
+                sta JoyWait
                 lda io.joy.VIA0_IRB    ; Read VIA Port B to get Joystick Value
                 and #$1F        ; Remove Unwanted bits
                 cmp #$1F        ; Any movement at all?
-                bne joystickNotDone
-                lda #$00
-                sta io.joy.CNT_0
-        +
+                bne process
+                stz io.joy.CNT_0
+        done
                 rts
 
-joystickNotDone
-                nop 
-
-joystickDoneNow
+        process
                 lda io.joy.VIA0_IRB
                 sta io.joy.VAL
                 and #$04              ; Check what value is cleared
-                cmp #$00
-                beq forwardX
+                beq joyLeft
 
                 lda io.joy.VAL
                 and #$08
-                cmp #$00
-                beq backwardX
+                beq joyRight
+
+                lda io.joy.VAL
+                and #$02
+                beq joyDown
 
                 lda io.joy.VAL
                 and #$01
-                cmp #$00
-                bne joystickDone
+                beq joyUp
 
-joystickDone
-                lda #$00
-                sta io.joy.CNT_0
+        end
+                stz io.joy.CNT_0
                 rts 
 
-forwardX      
-                ;cmp #$FE
-                ;beq joystickDone
+joyRight
+                lda CurPosX
+                cmp #7
+                beq end
+                inc a
+                sta CurPosX
+                jsr playfield.setCursorPos
+                bra end
+joyLeft
+                lda CurPosX
+                beq end
+                dec a
+                sta CurPosX
+                jsr playfield.setCursorPos
+                bra end
+joyDown
+                lda CurPosY
+                cmp #7
+                beq end
+                inc a
+                sta CurPosY
+                jsr playfield.setCursorPos
+                bra end
+joyUp
+                lda CurPosY
+                beq end
+                dec a
+                sta CurPosY
+                jsr playfield.setCursorPos
 
-                lda L0ScrollXL
-                clc
-                adc #4
-                sta L0ScrollXL
-                sta vky.tile.T0_MAP_X_POS_L
-                lda L0ScrollXH
-                adc #0
-                sta L0ScrollXH
-                sta vky.tile.T0_MAP_X_POS_H
-
-                lda L1ScrollXL
-                clc
-                adc #3
-                sta L1ScrollXL
-                sta vky.tile.T1_MAP_X_POS_L
-                lda L1ScrollXH
-                adc #0
-                sta L1ScrollXH
-                sta vky.tile.T1_MAP_X_POS_H
-
-                lda L2ScrollXL
-                clc
-                adc #1;L2VX
-                sta L2ScrollXL
-                ; sta vky.tile.T2_MAP_X_POS_L
-                lda L2ScrollXH
-                adc #0
-                sta L2ScrollXH
-                ; sta vky.tile.T2_MAP_X_POS_H
-
-                bra joystickDone
-
-backwardX     
-                lda L0ScrollXH
-                bne scroll
-                lda L0ScrollXL
-                cmp #$00
-                beq joystickDone
-scroll
-                lda L0ScrollXL
-                sec
-                sbc #4
-                sta L0ScrollXL
-                sta vky.tile.T0_MAP_X_POS_L
-                lda L0ScrollXH
-                sbc #0
-                sta L0ScrollXH
-                sta vky.tile.T0_MAP_X_POS_H
-
-                lda L1ScrollXL
-                sec
-                sbc #3
-                sta L1ScrollXL
-                sta vky.tile.T1_MAP_X_POS_L
-                lda L1ScrollXH
-                sbc #0
-                sta L1ScrollXH
-                sta vky.tile.T1_MAP_X_POS_H
-
-                lda L2ScrollXL
-                sec
-                sbc #1
-                sta L2ScrollXL
-                sta vky.tile.T2_MAP_X_POS_L
-                lda L2ScrollXH
-                sbc #0
-                sta L2ScrollXH
-                sta vky.tile.T2_MAP_X_POS_H
-                jmp joystickDone
+                bra end
+.bend        ; end block 
 
 .send        ; end section yam3g
 .endn        ; end namespace yam3g

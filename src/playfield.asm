@@ -34,6 +34,66 @@ OFF_GEM_BELOW    = 8
 .section yam3g
 
 ;********************************************************************************
+; initCursor
+;
+; Initialises the Cursor.
+;
+; input:
+; output:
+;********************************************************************************
+initCursor .proc
+                ; setup sprite data
+
+                lda #(<SpriteData)
+                sta vky.sprite.SP0_Addy_L
+                lda #>SpriteData
+                sta vky.sprite.SP0_Addy_M
+                lda #`SpriteData
+                sta vky.sprite.SP0_Addy_H
+
+                lda #vky.sprite.ENABLE | vky.sprite.LUT0 | vky.sprite.SIZE_16 | vky.sprite.DEPTH_L3
+                sta vky.sprite.SP0_Ctrl
+
+                stz vky.sprite.SP0_X_H
+                stz vky.sprite.SP0_Y_H
+                lda #32+6*16
+                sta vky.sprite.SP0_X_L
+                lda #32+4*16
+                sta vky.sprite.SP0_y_L
+                rts
+.endproc
+
+;********************************************************************************
+; setCursorPosition
+;
+; Sets a new cursor position.
+;
+; input:
+; * CurPosX: x-position
+; * CurPosY: y-position
+; output:
+;********************************************************************************
+setCursorPos .proc
+                lda CurPosX
+                asl
+                asl
+                asl
+                asl
+                clc
+                adc #32+6*16
+                sta vky.sprite.SP0_X_L
+                
+                lda CurPosY
+                asl
+                asl
+                asl
+                asl
+                clc
+                adc #32+4*16
+                sta vky.sprite.SP0_Y_L
+                rts
+.endproc
+;********************************************************************************
 ; generateNew
 ;
 ; Generate new playfield without any matches.
