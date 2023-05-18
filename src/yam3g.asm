@@ -178,6 +178,7 @@ InterruptHandlerJoystick .block
                 and #$1F        ; Remove Unwanted bits
                 cmp #$1F        ; Any movement at all?
                 bne process
+                stz JoyWait
                 stz io.joy.CNT_0
         done
                 rts
@@ -205,34 +206,16 @@ InterruptHandlerJoystick .block
                 rts 
 
 joyRight
-                lda CurPosX
-                cmp #7
-                beq end
-                inc a
-                sta CurPosX
-                jsr playfield.setCursorPos
+                jsr playfield.cursorRight
                 bra end
 joyLeft
-                lda CurPosX
-                beq end
-                dec a
-                sta CurPosX
-                jsr playfield.setCursorPos
+                jsr playfield.cursorLeft
                 bra end
 joyDown
-                lda CurPosY
-                cmp #7
-                beq end
-                inc a
-                sta CurPosY
-                jsr playfield.setCursorPos
+                jsr playfield.cursorDown
                 bra end
 joyUp
-                lda CurPosY
-                beq end
-                dec a
-                sta CurPosY
-                jsr playfield.setCursorPos
+                jsr playfield.cursorUp
 
                 bra end
 .bend        ; end block 

@@ -93,6 +93,77 @@ setCursorPos .proc
                 sta vky.sprite.SP0_Y_L
                 rts
 .endproc
+
+;********************************************************************************
+; cursorRight
+;
+; Move cursor to the right if not on edge.
+;
+; input:
+; output:
+;********************************************************************************
+cursorRight .proc
+                lda CurPosX
+                cmp #7
+                beq end
+                inc a
+                sta CurPosX
+                jsr setCursorPos
+        end     rts
+.endproc
+
+;********************************************************************************
+; cursorLeft
+;
+; Move cursor to the left if not on edge.
+;
+; input:
+; output:
+;********************************************************************************
+cursorLeft .proc
+                lda CurPosX
+                beq end
+                dec a
+                sta CurPosX
+                jsr setCursorPos
+        end     rts
+.endproc
+
+;********************************************************************************
+; cursorDown
+;
+; Move cursor to the down if not on edge.
+;
+; input:
+; output:
+;********************************************************************************
+cursorDown .proc
+                lda CurPosY
+                cmp #7
+                beq end
+                inc a
+                sta CurPosY
+                jsr setCursorPos
+        end     rts
+.endproc
+
+;********************************************************************************
+; cursorUp
+;
+; Move cursor to the up if not on edge.
+;
+; input:
+; output:
+;********************************************************************************
+cursorUp .proc
+                lda CurPosY
+                beq end
+                dec a
+                sta CurPosY
+                jsr setCursorPos
+        end     rts
+.endproc
+
 ;********************************************************************************
 ; generateNew
 ;
