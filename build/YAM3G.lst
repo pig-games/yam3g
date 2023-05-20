@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.58.2974? listing file
 ; 64tass --long-address -b -fc -o build/YAM3G.bin --list build/YAM3G.lst --labels=build/YAM3G.lbl src/main.asm src/init.asm src/system.asm src/yam3g.asm src/playfield.asm src/rnd.asm src/display.asm src/audio.asm src/defs/interrupt.asm src/defs/tinyvicky.asm src/defs/io.asm src/textencoding.asm
-; Thu May 18 14:16:22 2023
+; Sat May 20 15:48:00 2023
 
 ;Offset	;PC	;Hex		;Monitor	;Source
 
@@ -4156,6 +4156,7 @@
 >0008		00				        JoyWait         .byte 0
 >0009		00				        CurPosX         .byte 0
 >000a		00				        CurPosY         .byte 0
+>000b		00				        ButtonStatus    .byte 0
 .f000						start
 .f000		20 9a e0	jsr $e09a	                jsr system.setIOPage0
 .f003		9c 02 dc	stz $dc02	                stz io.joy.VIA0_DRB    ; Make Sure the VIA is in Read Mode for the Joystick
@@ -4237,60 +4238,78 @@
 .f0c2		8d 00 d2	sta $d200	                sta vky.tile.T0_CONTROL_REG  ; Enable Layer0
 .f0c5		8d 0c d2	sta $d20c	                sta vky.tile.T1_CONTROL_REG  ; Enable Layer1
 .f0c8		8d 18 d2	sta $d218	                sta vky.tile.T2_CONTROL_REG  ; Enable Layer2
-.f0cb		20 2e f1	jsr $f12e	                jsr playfield.initCursor
-.f0ce		20 9c f1	jsr $f19c	                jsr playfield.generateNew
-.f0d1		20 5a f2	jsr $f25a	                jsr playfield.updateTileMap
+.f0cb		20 49 f1	jsr $f149	                jsr playfield.initCursor
+.f0ce		20 bf f1	jsr $f1bf	                jsr playfield.generateNew
+.f0d1		20 7d f2	jsr $f27d	                jsr playfield.updateTileMap
 .f0d4		60		rts		                rts
 .f0d5						InterruptHandlerJoystick
 .f0d5		a9 01		lda #$01	                lda #interrupt.JR0_INT00_SOF
 .f0d7		2c 60 d6	bit $d660	                bit interrupt.PENDING_REG0
-.f0da		f0 1f		beq $f0fb	                beq done
+.f0da		f0 1d		beq $f0f9	                beq done
 .f0dc		8d 60 d6	sta $d660	                sta interrupt.PENDING_REG0
 .f0df		20 03 10	jsr $1003	                jsr musicPlay
 .f0e2		a5 08		lda $08		                lda JoyWait
 .f0e4		f0 04		beq $f0ea	                beq +
 .f0e6		c6 08		dec $08		                dec JoyWait
-.f0e8		80 11		bra $f0fb	                bra done
+.f0e8		80 0f		bra $f0f9	                bra done
 .f0ea						        +
 .f0ea		a9 08		lda #$08	                lda #8
 .f0ec		85 08		sta $08		                sta JoyWait
 .f0ee		ad 00 dc	lda $dc00	                lda io.joy.VIA0_IRB    ; Read VIA Port B to get Joystick Value
-.f0f1		29 1f		and #$1f	                and #$1F        ; Remove Unwanted bits
-.f0f3		c9 1f		cmp #$1f	                cmp #$1F        ; Any movement at all?
-.f0f5		d0 05		bne $f0fc	                bne process
+.f0f1		49 ff		eor #$ff	                eor #$FF        ; flip bits
+.f0f3		29 7f		and #$7f	                and #$7F        ; Remove Unwanted bits
+.f0f5		d0 03		bne $f0fa	                bne process     ; if not zero, there is some joy activity
 .f0f7		64 08		stz $08		                stz JoyWait
-.f0f9		64 50		stz $50		                stz io.joy.CNT_0
-.f0fb						        done
-.f0fb		60		rts		                rts
-.f0fc						        process
-.f0fc		ad 00 dc	lda $dc00	                lda io.joy.VIA0_IRB
-.f0ff		85 52		sta $52		                sta io.joy.VAL
-.f101		29 04		and #$04	                and #$04              ; Check what value is cleared
-.f103		f0 1a		beq $f11f	                beq joyLeft
-.f105		a5 52		lda $52		                lda io.joy.VAL
-.f107		29 08		and #$08	                and #$08
-.f109		f0 0f		beq $f11a	                beq joyRight
-.f10b		a5 52		lda $52		                lda io.joy.VAL
-.f10d		29 02		and #$02	                and #$02
-.f10f		f0 13		beq $f124	                beq joyDown
-.f111		a5 52		lda $52		                lda io.joy.VAL
-.f113		29 01		and #$01	                and #$01
-.f115		f0 12		beq $f129	                beq joyUp
-.f117						        end
-.f117		64 50		stz $50		                stz io.joy.CNT_0
-.f119		60		rts		                rts
-.f11a						joyRight
-.f11a		20 6c f1	jsr $f16c	                jsr playfield.cursorRight
-.f11d		80 f8		bra $f117	                bra end
-.f11f						joyLeft
-.f11f		20 79 f1	jsr $f179	                jsr playfield.cursorLeft
-.f122		80 f3		bra $f117	                bra end
-.f124						joyDown
-.f124		20 84 f1	jsr $f184	                jsr playfield.cursorDown
-.f127		80 ee		bra $f117	                bra end
-.f129						joyUp
-.f129		20 91 f1	jsr $f191	                jsr playfield.cursorUp
-.f12c		80 e9		bra $f117	                bra end
+.f0f9						        done
+.f0f9		60		rts		                rts
+.f0fa						        process
+.f0fa		85 15		sta $15		                sta io.joy.VAL
+.f0fc		4a		lsr a		                lsr a
+.f0fd		b0 3a		bcs $f139	                bcs joyUp
+.f0ff		4a		lsr a		                lsr a
+.f100		b0 27		bcs $f129	                bcs joyDown
+.f102		4a		lsr a		                lsr a
+.f103		b0 14		bcs $f119	                bcs joyLeft
+.f105		4a		lsr a		                lsr a
+.f106		b0 01		bcs $f109	                bcs joyRight
+.f108						        end
+.f108		60		rts		                rts
+.f109						joyRight
+.f109		a5 15		lda $15		                lda io.joy.VAL
+.f10b		29 10		and #$10	                and io.joy.BUTTON_0_MASK
+.f10d		f0 03		beq $f112	                beq +
+.f10f		20 b9 f1	jsr $f1b9	                jsr playfield.swapRight
+.f112						        +
+.f112		90 f4		bcc $f108	                bcc end                        ; swap failed we're done
+.f114		20 87 f1	jsr $f187	                jsr playfield.cursorRight
+.f117		80 ef		bra $f108	                bra end
+.f119						joyLeft
+.f119		a5 15		lda $15		                lda io.joy.VAL
+.f11b		29 10		and #$10	                and io.joy.BUTTON_0_MASK
+.f11d		f0 03		beq $f122	                beq +
+.f11f		20 b7 f1	jsr $f1b7	                jsr playfield.swapLeft
+.f122						        +
+.f122		90 e4		bcc $f108	                bcc end                        ; swap failed we're done
+.f124		20 94 f1	jsr $f194	                jsr playfield.cursorLeft
+.f127		80 df		bra $f108	                bra end
+.f129						joyDown
+.f129		a5 15		lda $15		                lda io.joy.VAL
+.f12b		29 10		and #$10	                and io.joy.BUTTON_0_MASK
+.f12d		f0 03		beq $f132	                beq +
+.f12f		20 bd f1	jsr $f1bd	                jsr playfield.swapDown
+.f132						        +
+.f132		90 d4		bcc $f108	                bcc end                        ; swap failed we're done
+.f134		20 9f f1	jsr $f19f	                jsr playfield.cursorDown
+.f137		80 cf		bra $f108	                bra end
+.f139						joyUp
+.f139		a5 15		lda $15		                lda io.joy.VAL
+.f13b		29 10		and #$10	                and io.joy.BUTTON_0_MASK
+.f13d		f0 05		beq $f144	                beq +
+.f13f		20 bb f1	jsr $f1bb	                jsr playfield.swapUp
+.f142		90 c4		bcc $f108	                bcc end                        ; swap failed we're done
+.f144						        +
+.f144		20 ac f1	jsr $f1ac	                jsr playfield.cursorUp
+.f147		80 bf		bra $f108	                bra end
 
 ;******  Processing input file: src/playfield.asm
 
@@ -4307,252 +4326,264 @@
 ;		...repeated 2 times (32 bytes)...
 >e838		00 00 00 00 00 00 00 00
 .e840							PlayFieldEnd
->000b							TileAddr        .fill 2
->000d							PlayFieldAddr   .fill 2
->000f		00					Temp            .byte 0
-.f12e						initCursor
-.f12e		a9 00		lda #$00	                lda #(<SpriteData)
-.f130		8d 01 d9	sta $d901	                sta vky.sprite.SP0_Addy_L
-.f133		a9 15		lda #$15	                lda #>SpriteData
-.f135		8d 02 d9	sta $d902	                sta vky.sprite.SP0_Addy_M
-.f138		a9 01		lda #$01	                lda #`SpriteData
-.f13a		8d 03 d9	sta $d903	                sta vky.sprite.SP0_Addy_H
-.f13d		a9 41		lda #$41	                lda #vky.sprite.ENABLE | vky.sprite.LUT0 | vky.sprite.SIZE_16 | vky.sprite.DEPTH_L3
-.f13f		8d 00 d9	sta $d900	                sta vky.sprite.SP0_Ctrl
-.f142		9c 05 d9	stz $d905	                stz vky.sprite.SP0_X_H
-.f145		9c 07 d9	stz $d907	                stz vky.sprite.SP0_Y_H
-.f148		a9 80		lda #$80	                lda #32+6*16
-.f14a		8d 04 d9	sta $d904	                sta vky.sprite.SP0_X_L
-.f14d		a9 60		lda #$60	                lda #32+4*16
-.f14f		8d 06 d9	sta $d906	                sta vky.sprite.SP0_y_L
-.f152		60		rts		                rts
-.f153						setCursorPos
-.f153		a5 09		lda $09		                lda CurPosX
-.f155		0a		asl a		                asl
-.f156		0a		asl a		                asl
-.f157		0a		asl a		                asl
-.f158		0a		asl a		                asl
-.f159		18		clc		                clc
-.f15a		69 80		adc #$80	                adc #32+6*16
-.f15c		8d 04 d9	sta $d904	                sta vky.sprite.SP0_X_L
-.f15f		a5 0a		lda $0a		                lda CurPosY
-.f161		0a		asl a		                asl
-.f162		0a		asl a		                asl
-.f163		0a		asl a		                asl
-.f164		0a		asl a		                asl
-.f165		18		clc		                clc
-.f166		69 60		adc #$60	                adc #32+4*16
-.f168		8d 06 d9	sta $d906	                sta vky.sprite.SP0_Y_L
-.f16b		60		rts		                rts
-.f16c						cursorRight
-.f16c		a5 09		lda $09		                lda CurPosX
-.f16e		c9 07		cmp #$07	                cmp #7
-.f170		f0 06		beq $f178	                beq end
-.f172		1a		inc a		                inc a
-.f173		85 09		sta $09		                sta CurPosX
-.f175		20 53 f1	jsr $f153	                jsr setCursorPos
-.f178		60		rts		        end     rts
-.f179						cursorLeft
-.f179		a5 09		lda $09		                lda CurPosX
-.f17b		f0 06		beq $f183	                beq end
-.f17d		3a		dec a		                dec a
-.f17e		85 09		sta $09		                sta CurPosX
-.f180		20 53 f1	jsr $f153	                jsr setCursorPos
-.f183		60		rts		        end     rts
-.f184						cursorDown
-.f184		a5 0a		lda $0a		                lda CurPosY
-.f186		c9 07		cmp #$07	                cmp #7
-.f188		f0 06		beq $f190	                beq end
-.f18a		1a		inc a		                inc a
-.f18b		85 0a		sta $0a		                sta CurPosY
-.f18d		20 53 f1	jsr $f153	                jsr setCursorPos
-.f190		60		rts		        end     rts
-.f191						cursorUp
-.f191		a5 0a		lda $0a		                lda CurPosY
-.f193		f0 06		beq $f19b	                beq end
-.f195		3a		dec a		                dec a
-.f196		85 0a		sta $0a		                sta CurPosY
-.f198		20 53 f1	jsr $f153	                jsr setCursorPos
-.f19b		60		rts		        end     rts
-.f19c						generateNew
-.f19c		a9 07		lda #$07	                lda #7
-.f19e		20 aa f2	jsr $f2aa	                jsr rnd.init                        ;Galois24o
-.f1a1		a9 3f		lda #$3f	                lda #<PlayFieldEnd-1
-.f1a3		85 0d		sta $0d		                sta PlayFieldAddr
-.f1a5		a9 e8		lda #$e8	                lda #>PlayFieldEnd-1
-.f1a7		85 0e		sta $0e		                sta PlayFieldAddr+1
-.f1a9		a2 40		ldx #$40	                ldx #64
-.f1ab						        loop
-.f1ab		64 0f		stz $0f		                stz Temp                          ; intialize Temp
-.f1ad		20 bb f2	jsr $f2bb	                jsr rnd.generate                  ; get random number
-.f1b0		92 0d		sta ($0d)	                sta (PlayFieldAddr)               ; store gem number in current gem position
-.f1b2		20 21 f2	jsr $f221	                jsr checkHorizontalMatch
-.f1b5		b0 05		bcs $f1bc	                bcs noHorizontalMatch             ; no horizontal match, go check vertical match
-.f1b7		d0 0f		bne $f1c8	                bne unmatchGem                    ; z is set, which means that we neighbour a second consecutive match, so unmatch
-.f1b9		20 fb f1	jsr $f1fb	                jsr setHorizontalMatchBits        ; out neighbour is the first match, so set match bits
-.f1bc						        noHorizontalMatch
-.f1bc		20 3c f2	jsr $f23c	                jsr checkVerticalMatch
-.f1bf		b0 34		bcs $f1f5	                bcs endMatching                   ; no vertical match so we're done
-.f1c1		d0 05		bne $f1c8	                bne unmatchGem                    ; z is set, see above
-.f1c3		20 0a f2	jsr $f20a	                jsr setVerticalMatchBits          ; see above
-.f1c6		80 2d		bra $f1f5	                bra endMatching
-.f1c8						        unmatchGem
-.f1c8		20 19 f2	jsr $f219	                jsr increaseGemNumber
-.f1cb		a5 0f		lda $0f		                lda Temp
-.f1cd		89 40		bit #$40	                bit #HORIZONTAL_MATCH
-.f1cf		f0 0f		beq $f1e0	                beq recheckVertical               ; we didn't have a horizontal match, but may have had a vertical match so recheck on that
-.f1d1		20 3c f2	jsr $f23c	                jsr checkVerticalMatch            ; we did unmatch a horizontal match, so check if we created a new vertical match
-.f1d4		b0 0a		bcs $f1e0	                bcs recheckVertical               ; we didn't introduce a new vertical match, so go recheck potential vertical match
-.f1d6		d0 05		bne $f1dd	                bne +
-.f1d8		20 0a f2	jsr $f20a	                jsr setVerticalMatchBits          ; we have a match and it is our first vertical (z is set), set bits
-.f1db		80 03		bra $f1e0	                bra recheckVertical
-.f1dd						        +
-.f1dd		20 19 f2	jsr $f219	                jsr increaseGemNumber             ; we have a match and it's the third vertical so increase gem number one more
-.f1e0						        recheckVertical
-.f1e0		a5 0f		lda $0f		                lda Temp
-.f1e2		89 80		bit #$80	                bit #VERTICAL_MATCH
-.f1e4		f0 0f		beq $f1f5	                beq endMatching                   ; we didn't have a horizontal match, so we're really done here
-.f1e6		20 21 f2	jsr $f221	                jsr checkHorizontalMatch
-.f1e9		b0 0a		bcs $f1f5	                bcs endMatching                   ; we didn't introduce a new horizontal match so we're done
-.f1eb		d0 05		bne $f1f2	                bne +
-.f1ed		20 fb f1	jsr $f1fb	                jsr setHorizontalMatchBits        ; we have a match and it is our first horizontal (z is set), set bits
-.f1f0		80 03		bra $f1f5	                bra endMatching
-.f1f2						        +
-.f1f2		20 19 f2	jsr $f219	                jsr increaseGemNumber             ; we have a match and it's the third horizontal so increase gem number one more
-.f1f5						        endMatching
-.f1f5		c6 0d		dec $0d		                dec PlayFieldAddr
-.f1f7		ca		dex		                dex
-.f1f8		d0 b1		bne $f1ab	                bne loop
-.f1fa		60		rts			rts
-.f1fb						setHorizontalMatchBits
-.f1fb		a9 40		lda #$40	                lda #HORIZONTAL_MATCH
-.f1fd		12 0d		ora ($0d)	                ora (PlayFieldAddr)
-.f1ff		92 0d		sta ($0d)	                sta (PlayFieldAddr)
-.f201		a9 40		lda #$40	                lda #HORIZONTAL_MATCH
-.f203		a0 01		ldy #$01	                ldy #OFF_GEM_RIGHT
-.f205		11 0d		ora ($0d),y	                ora (PlayFieldAddr),y
-.f207		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f209		60		rts		        rts
-.f20a						setVerticalMatchBits
-.f20a		a9 80		lda #$80	                lda #VERTICAL_MATCH
-.f20c		12 0d		ora ($0d)	                ora (PlayFieldAddr)
-.f20e		92 0d		sta ($0d)	                sta (PlayFieldAddr)
-.f210		a0 08		ldy #$08	                ldy #OFF_GEM_BELOW
-.f212		a9 80		lda #$80	                lda #VERTICAL_MATCH
-.f214		11 0d		ora ($0d),y	                ora (PlayFieldAddr),y
-.f216		91 0d		sta ($0d),y	                sta (PlayFieldAddr),y
-.f218		60		rts		        rts
-.f219						increaseGemNumber
-.f219		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
-.f21b		1a		inc a		                inc a                         ; increase gem number to no long match
-.f21c		29 07		and #$07	                and #7                        ; roll-over if needed
-.f21e		92 0d		sta ($0d)	                sta (PlayFieldAddr)
-.f220		60		rts		        rts
-.f221						checkHorizontalMatch
-.f221		8a		txa		                txa
-.f222		29 07		and #$07	                and #$7                           ; check if our counter (x) is a multiple of 8 so right most
-.f224		f0 14		beq $f23a	                beq noMatch                       ; we still want to check for a vertical match below
-.f226		b2 0d		lda ($0d)	                lda (PlayFieldAddr)               ; restore gem number and check for match with gem to the right
-.f228		a0 01		ldy #$01	                ldy #OFF_GEM_RIGHT
-.f22a		51 0d		eor ($0d),y	                eor (PlayFieldAddr),y
-.f22c		29 07		and #$07	                and #7
-.f22e		d0 0a		bne $f23a	                bne noMatch                       ; no horizontal match so we check vertical
-.f230		a9 40		lda #$40	                lda #HORIZONTAL_MATCH             ; bit indicating horizontal match between two gems
-.f232		05 0f		ora $0f		                ora Temp
-.f234		85 0f		sta $0f		                sta Temp                          ; add match bit to Temp, so we can use that later to check for matches
-.f236		31 0d		and ($0d),y	                and (PlayFieldAddr),y             ; set z if our neighbour already was a match, else this is the first match
-.f238		18		clc		                clc                               ; clear c to indicate a match
-.f239		60		rts		                rts
-.f23a						noMatch
-.f23a		38		sec		                sec                               ; set c to indicate no match
+>000c							TileAddr        .fill 2
+>000e							PlayFieldAddr   .fill 2
+>0010		00					Temp            .byte 0
+.f149						initCursor
+.f149		a9 00		lda #$00	                lda #(<SpriteData)
+.f14b		8d 01 d9	sta $d901	                sta vky.sprite.SP0_Addy_L
+.f14e		a9 15		lda #$15	                lda #>SpriteData
+.f150		8d 02 d9	sta $d902	                sta vky.sprite.SP0_Addy_M
+.f153		a9 01		lda #$01	                lda #`SpriteData
+.f155		8d 03 d9	sta $d903	                sta vky.sprite.SP0_Addy_H
+.f158		a9 41		lda #$41	                lda #vky.sprite.ENABLE | vky.sprite.LUT0 | vky.sprite.SIZE_16 | vky.sprite.DEPTH_L3
+.f15a		8d 00 d9	sta $d900	                sta vky.sprite.SP0_Ctrl
+.f15d		9c 05 d9	stz $d905	                stz vky.sprite.SP0_X_H
+.f160		9c 07 d9	stz $d907	                stz vky.sprite.SP0_Y_H
+.f163		a9 80		lda #$80	                lda #32+6*16
+.f165		8d 04 d9	sta $d904	                sta vky.sprite.SP0_X_L
+.f168		a9 60		lda #$60	                lda #32+4*16
+.f16a		8d 06 d9	sta $d906	                sta vky.sprite.SP0_y_L
+.f16d		60		rts		                rts
+.f16e						setCursorPos
+.f16e		a5 09		lda $09		                lda CurPosX
+.f170		0a		asl a		                asl
+.f171		0a		asl a		                asl
+.f172		0a		asl a		                asl
+.f173		0a		asl a		                asl
+.f174		18		clc		                clc
+.f175		69 80		adc #$80	                adc #32+6*16
+.f177		8d 04 d9	sta $d904	                sta vky.sprite.SP0_X_L
+.f17a		a5 0a		lda $0a		                lda CurPosY
+.f17c		0a		asl a		                asl
+.f17d		0a		asl a		                asl
+.f17e		0a		asl a		                asl
+.f17f		0a		asl a		                asl
+.f180		18		clc		                clc
+.f181		69 60		adc #$60	                adc #32+4*16
+.f183		8d 06 d9	sta $d906	                sta vky.sprite.SP0_Y_L
+.f186		60		rts		                rts
+.f187						cursorRight
+.f187		a5 09		lda $09		                lda CurPosX
+.f189		c9 07		cmp #$07	                cmp #7
+.f18b		f0 06		beq $f193	                beq end
+.f18d		1a		inc a		                inc a
+.f18e		85 09		sta $09		                sta CurPosX
+.f190		20 6e f1	jsr $f16e	                jsr setCursorPos
+.f193		60		rts		        end     rts
+.f194						cursorLeft
+.f194		a5 09		lda $09		                lda CurPosX
+.f196		f0 06		beq $f19e	                beq end
+.f198		3a		dec a		                dec a
+.f199		85 09		sta $09		                sta CurPosX
+.f19b		20 6e f1	jsr $f16e	                jsr setCursorPos
+.f19e		60		rts		        end     rts
+.f19f						cursorDown
+.f19f		a5 0a		lda $0a		                lda CurPosY
+.f1a1		c9 07		cmp #$07	                cmp #7
+.f1a3		f0 06		beq $f1ab	                beq end
+.f1a5		1a		inc a		                inc a
+.f1a6		85 0a		sta $0a		                sta CurPosY
+.f1a8		20 6e f1	jsr $f16e	                jsr setCursorPos
+.f1ab		60		rts		        end     rts
+.f1ac						cursorUp
+.f1ac		a5 0a		lda $0a		                lda CurPosY
+.f1ae		f0 06		beq $f1b6	                beq end
+.f1b0		3a		dec a		                dec a
+.f1b1		85 0a		sta $0a		                sta CurPosY
+.f1b3		20 6e f1	jsr $f16e	                jsr setCursorPos
+.f1b6		60		rts		        end     rts
+.f1b7						swapLeft
+.f1b7		18		clc		        clc
+.f1b8		60		rts		        rts
+.f1b9						swapRight
+.f1b9		18		clc		        clc
+.f1ba		60		rts		        rts
+.f1bb						swapUp
+.f1bb		18		clc		        clc
+.f1bc		60		rts		        rts
+.f1bd						swapDown
+.f1bd		18		clc		        clc
+.f1be		60		rts		        rts
+.f1bf						generateNew
+.f1bf		a9 07		lda #$07	                lda #7
+.f1c1		20 cd f2	jsr $f2cd	                jsr rnd.init                        ;Galois24o
+.f1c4		a9 3f		lda #$3f	                lda #<PlayFieldEnd-1
+.f1c6		85 0e		sta $0e		                sta PlayFieldAddr
+.f1c8		a9 e8		lda #$e8	                lda #>PlayFieldEnd-1
+.f1ca		85 0f		sta $0f		                sta PlayFieldAddr+1
+.f1cc		a2 40		ldx #$40	                ldx #64
+.f1ce						        loop
+.f1ce		64 10		stz $10		                stz Temp                          ; intialize Temp
+.f1d0		20 de f2	jsr $f2de	                jsr rnd.generate                  ; get random number
+.f1d3		92 0e		sta ($0e)	                sta (PlayFieldAddr)               ; store gem number in current gem position
+.f1d5		20 44 f2	jsr $f244	                jsr checkHorizontalMatch
+.f1d8		b0 05		bcs $f1df	                bcs noHorizontalMatch             ; no horizontal match, go check vertical match
+.f1da		d0 0f		bne $f1eb	                bne unmatchGem                    ; z is set, which means that we neighbour a second consecutive match, so unmatch
+.f1dc		20 1e f2	jsr $f21e	                jsr setHorizontalMatchBits        ; out neighbour is the first match, so set match bits
+.f1df						        noHorizontalMatch
+.f1df		20 5f f2	jsr $f25f	                jsr checkVerticalMatch
+.f1e2		b0 34		bcs $f218	                bcs endMatching                   ; no vertical match so we're done
+.f1e4		d0 05		bne $f1eb	                bne unmatchGem                    ; z is set, see above
+.f1e6		20 2d f2	jsr $f22d	                jsr setVerticalMatchBits          ; see above
+.f1e9		80 2d		bra $f218	                bra endMatching
+.f1eb						        unmatchGem
+.f1eb		20 3c f2	jsr $f23c	                jsr increaseGemNumber
+.f1ee		a5 10		lda $10		                lda Temp
+.f1f0		89 40		bit #$40	                bit #HORIZONTAL_MATCH
+.f1f2		f0 0f		beq $f203	                beq recheckVertical               ; we didn't have a horizontal match, but may have had a vertical match so recheck on that
+.f1f4		20 5f f2	jsr $f25f	                jsr checkVerticalMatch            ; we did unmatch a horizontal match, so check if we created a new vertical match
+.f1f7		b0 0a		bcs $f203	                bcs recheckVertical               ; we didn't introduce a new vertical match, so go recheck potential vertical match
+.f1f9		d0 05		bne $f200	                bne +
+.f1fb		20 2d f2	jsr $f22d	                jsr setVerticalMatchBits          ; we have a match and it is our first vertical (z is set), set bits
+.f1fe		80 03		bra $f203	                bra recheckVertical
+.f200						        +
+.f200		20 3c f2	jsr $f23c	                jsr increaseGemNumber             ; we have a match and it's the third vertical so increase gem number one more
+.f203						        recheckVertical
+.f203		a5 10		lda $10		                lda Temp
+.f205		89 80		bit #$80	                bit #VERTICAL_MATCH
+.f207		f0 0f		beq $f218	                beq endMatching                   ; we didn't have a horizontal match, so we're really done here
+.f209		20 44 f2	jsr $f244	                jsr checkHorizontalMatch
+.f20c		b0 0a		bcs $f218	                bcs endMatching                   ; we didn't introduce a new horizontal match so we're done
+.f20e		d0 05		bne $f215	                bne +
+.f210		20 1e f2	jsr $f21e	                jsr setHorizontalMatchBits        ; we have a match and it is our first horizontal (z is set), set bits
+.f213		80 03		bra $f218	                bra endMatching
+.f215						        +
+.f215		20 3c f2	jsr $f23c	                jsr increaseGemNumber             ; we have a match and it's the third horizontal so increase gem number one more
+.f218						        endMatching
+.f218		c6 0e		dec $0e		                dec PlayFieldAddr
+.f21a		ca		dex		                dex
+.f21b		d0 b1		bne $f1ce	                bne loop
+.f21d		60		rts			rts
+.f21e						setHorizontalMatchBits
+.f21e		a9 40		lda #$40	                lda #HORIZONTAL_MATCH
+.f220		12 0e		ora ($0e)	                ora (PlayFieldAddr)
+.f222		92 0e		sta ($0e)	                sta (PlayFieldAddr)
+.f224		a9 40		lda #$40	                lda #HORIZONTAL_MATCH
+.f226		a0 01		ldy #$01	                ldy #OFF_GEM_RIGHT
+.f228		11 0e		ora ($0e),y	                ora (PlayFieldAddr),y
+.f22a		91 0e		sta ($0e),y	                sta (PlayFieldAddr),y
+.f22c		60		rts		        rts
+.f22d						setVerticalMatchBits
+.f22d		a9 80		lda #$80	                lda #VERTICAL_MATCH
+.f22f		12 0e		ora ($0e)	                ora (PlayFieldAddr)
+.f231		92 0e		sta ($0e)	                sta (PlayFieldAddr)
+.f233		a0 08		ldy #$08	                ldy #OFF_GEM_BELOW
+.f235		a9 80		lda #$80	                lda #VERTICAL_MATCH
+.f237		11 0e		ora ($0e),y	                ora (PlayFieldAddr),y
+.f239		91 0e		sta ($0e),y	                sta (PlayFieldAddr),y
 .f23b		60		rts		        rts
-.f23c						checkVerticalMatch
-.f23c		e0 39		cpx #$39	                cpx #57                           ; check if we're on the bottom row, if so, no vertical matching is needed
-.f23e		90 02		bcc $f242	                bcc notBottomRow
-.f240		80 16		bra $f258	                bra noMatch                       ; if >= 56, we're in the bottom row so no lower matches possible, but maybe horizontal
-.f242						        notBottomRow
-.f242		a0 08		ldy #$08	                ldy #OFF_GEM_BELOW
-.f244		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
-.f246		51 0d		eor ($0d),y	                eor (PlayFieldAddr),y
-.f248		29 07		and #$07	                and #7
-.f24a		d0 0c		bne $f258	                bne noMatch
-.f24c		a9 80		lda #$80	                lda #VERTICAL_MATCH               ; bit indicating vertical match between two gems
-.f24e		05 0f		ora $0f		                ora Temp
-.f250		85 0f		sta $0f		                sta Temp                          ; add match bit to Temp, so we can use that later to check for matches
-.f252		a9 80		lda #$80	                lda #VERTICAL_MATCH
-.f254		31 0d		and ($0d),y	                and (PlayFieldAddr),y             ; set z if our neighbour already was a match, else this is the first match
-.f256		18		clc		                clc                               ; clear c to indicate a match
-.f257		60		rts		                rts
-.f258						noMatch
-.f258		38		sec		                sec                               ; set c to indicate no match
-.f259		60		rts		        rts
-.f25a						updateTileMap
-.f25a		a9 80		lda #$80			lda #$80
-.f25c		85 00		sta $00				sta $00
-.f25e		a5 09		lda $09				lda $08+$1
-.f260		48		pha				pha
-.f261		a9 08		lda #$08	                lda #8
-.f263		85 09		sta $09		                sta $08+$1
-.f265		64 00		stz $00				stz $00
-.f267		a9 00		lda #$00	                lda #<PlayField
-.f269		85 0d		sta $0d		                sta PlayFieldAddr
-.f26b		a9 e8		lda #$e8	                lda #>PlayField
-.f26d		85 0e		sta $0e		                sta PlayFieldAddr+1
-.f26f		a9 b6		lda #$b6	                lda #(8*TileMapXSize)+14
-.f271		85 0b		sta $0b		                sta TileAddr
-.f273		a9 25		lda #$25	                lda #$25
-.f275		85 0c		sta $0c		                sta TileAddr+1
-.f277		a2 08		ldx #$08	                ldx #8
-.f279						        rowLoop
-.f279		a0 00		ldy #$00	                ldy #0
-.f27b						        colLoop
-.f27b		b2 0d		lda ($0d)	                lda (PlayFieldAddr)
-.f27d		29 07		and #$07	                and #7
-.f27f		18		clc		                clc
-.f280		69 50		adc #$50	                adc #80
-.f282		91 0b		sta ($0b),y	                sta (TileAddr),y
-.f284		a9 00		lda #$00	                lda #0
-.f286		c8		iny		                iny
-.f287		91 0b		sta ($0b),y	                sta (TileAddr),y
-.f289		e6 0d		inc $0d		                inc PlayFieldAddr
-.f28b		c8		iny		                iny
-.f28c		c0 10		cpy #$10	                cpy #16
-.f28e		d0 eb		bne $f27b	                bne colLoop
-.f290		18		clc		                clc
-.f291		a5 0b		lda $0b		                lda TileAddr
-.f293		69 2a		adc #$2a	                adc #42
-.f295		85 0b		sta $0b		                sta TileAddr
-.f297		a5 0c		lda $0c		                lda TileAddr+1
-.f299		69 00		adc #$00	                adc #0
-.f29b		85 0c		sta $0c		                sta TileAddr+1
-.f29d		ca		dex		                dex
-.f29e		d0 d9		bne $f279	                bne rowLoop
-.f2a0		a9 80		lda #$80			lda #$80
-.f2a2		85 00		sta $00				sta $00
-.f2a4		68		pla				pla
-.f2a5		85 09		sta $09				sta $08+$1
-.f2a7		64 00		stz $00				stz $00
-.f2a9		60		rts			rts
+.f23c						increaseGemNumber
+.f23c		b2 0e		lda ($0e)	                lda (PlayFieldAddr)
+.f23e		1a		inc a		                inc a                         ; increase gem number to no long match
+.f23f		29 07		and #$07	                and #7                        ; roll-over if needed
+.f241		92 0e		sta ($0e)	                sta (PlayFieldAddr)
+.f243		60		rts		        rts
+.f244						checkHorizontalMatch
+.f244		8a		txa		                txa
+.f245		29 07		and #$07	                and #$7                           ; check if our counter (x) is a multiple of 8 so right most
+.f247		f0 14		beq $f25d	                beq noMatch                       ; we still want to check for a vertical match below
+.f249		b2 0e		lda ($0e)	                lda (PlayFieldAddr)               ; restore gem number and check for match with gem to the right
+.f24b		a0 01		ldy #$01	                ldy #OFF_GEM_RIGHT
+.f24d		51 0e		eor ($0e),y	                eor (PlayFieldAddr),y
+.f24f		29 07		and #$07	                and #7
+.f251		d0 0a		bne $f25d	                bne noMatch                       ; no horizontal match so we check vertical
+.f253		a9 40		lda #$40	                lda #HORIZONTAL_MATCH             ; bit indicating horizontal match between two gems
+.f255		05 10		ora $10		                ora Temp
+.f257		85 10		sta $10		                sta Temp                          ; add match bit to Temp, so we can use that later to check for matches
+.f259		31 0e		and ($0e),y	                and (PlayFieldAddr),y             ; set z if our neighbour already was a match, else this is the first match
+.f25b		18		clc		                clc                               ; clear c to indicate a match
+.f25c		60		rts		                rts
+.f25d						noMatch
+.f25d		38		sec		                sec                               ; set c to indicate no match
+.f25e		60		rts		        rts
+.f25f						checkVerticalMatch
+.f25f		e0 39		cpx #$39	                cpx #57                           ; check if we're on the bottom row, if so, no vertical matching is needed
+.f261		90 02		bcc $f265	                blt notBottomRow
+.f263		80 16		bra $f27b	                bra noMatch                       ; if >= 56, we're in the bottom row so no lower matches possible, but maybe horizontal
+.f265						        notBottomRow
+.f265		a0 08		ldy #$08	                ldy #OFF_GEM_BELOW
+.f267		b2 0e		lda ($0e)	                lda (PlayFieldAddr)
+.f269		51 0e		eor ($0e),y	                eor (PlayFieldAddr),y
+.f26b		29 07		and #$07	                and #7
+.f26d		d0 0c		bne $f27b	                bne noMatch
+.f26f		a9 80		lda #$80	                lda #VERTICAL_MATCH               ; bit indicating vertical match between two gems
+.f271		05 10		ora $10		                ora Temp
+.f273		85 10		sta $10		                sta Temp                          ; add match bit to Temp, so we can use that later to check for matches
+.f275		a9 80		lda #$80	                lda #VERTICAL_MATCH
+.f277		31 0e		and ($0e),y	                and (PlayFieldAddr),y             ; set z if our neighbour already was a match, else this is the first match
+.f279		18		clc		                clc                               ; clear c to indicate a match
+.f27a		60		rts		                rts
+.f27b						noMatch
+.f27b		38		sec		                sec                               ; set c to indicate no match
+.f27c		60		rts		        rts
+.f27d						updateTileMap
+.f27d		a9 80		lda #$80			lda #$80
+.f27f		85 00		sta $00				sta $00
+.f281		a5 09		lda $09				lda $08+$1
+.f283		48		pha				pha
+.f284		a9 08		lda #$08	                lda #8
+.f286		85 09		sta $09		                sta $08+$1
+.f288		64 00		stz $00				stz $00
+.f28a		a9 00		lda #$00	                lda #<PlayField
+.f28c		85 0e		sta $0e		                sta PlayFieldAddr
+.f28e		a9 e8		lda #$e8	                lda #>PlayField
+.f290		85 0f		sta $0f		                sta PlayFieldAddr+1
+.f292		a9 b6		lda #$b6	                lda #(8*TileMapXSize)+14
+.f294		85 0c		sta $0c		                sta TileAddr
+.f296		a9 25		lda #$25	                lda #$25
+.f298		85 0d		sta $0d		                sta TileAddr+1
+.f29a		a2 08		ldx #$08	                ldx #8
+.f29c						        rowLoop
+.f29c		a0 00		ldy #$00	                ldy #0
+.f29e						        colLoop
+.f29e		b2 0e		lda ($0e)	                lda (PlayFieldAddr)
+.f2a0		29 07		and #$07	                and #7
+.f2a2		18		clc		                clc
+.f2a3		69 50		adc #$50	                adc #80
+.f2a5		91 0c		sta ($0c),y	                sta (TileAddr),y
+.f2a7		a9 00		lda #$00	                lda #0
+.f2a9		c8		iny		                iny
+.f2aa		91 0c		sta ($0c),y	                sta (TileAddr),y
+.f2ac		e6 0e		inc $0e		                inc PlayFieldAddr
+.f2ae		c8		iny		                iny
+.f2af		c0 10		cpy #$10	                cpy #16
+.f2b1		d0 eb		bne $f29e	                bne colLoop
+.f2b3		18		clc		                clc
+.f2b4		a5 0c		lda $0c		                lda TileAddr
+.f2b6		69 2a		adc #$2a	                adc #42
+.f2b8		85 0c		sta $0c		                sta TileAddr
+.f2ba		a5 0d		lda $0d		                lda TileAddr+1
+.f2bc		69 00		adc #$00	                adc #0
+.f2be		85 0d		sta $0d		                sta TileAddr+1
+.f2c0		ca		dex		                dex
+.f2c1		d0 d9		bne $f29c	                bne rowLoop
+.f2c3		a9 80		lda #$80			lda #$80
+.f2c5		85 00		sta $00				sta $00
+.f2c7		68		pla				pla
+.f2c8		85 09		sta $09				sta $08+$1
+.f2ca		64 00		stz $00				stz $00
+.f2cc		60		rts			rts
 
 ;******  Processing input file: src/rnd.asm
 
->0010						seed	.fill 4
-.f2aa						init
-.f2aa		8d a4 d6	sta $d6a4	        sta vky.sysctrl.LFSR_DATA_LO       ; store seed
-.f2ad		8d a5 d6	sta $d6a5	        sta vky.sysctrl.LFSR_DATA_HI
-.f2b0		a9 02		lda #$02	        lda #vky.sysctrl.LFSR_SEED_WRITE
-.f2b2		8d a6 d6	sta $d6a6	        sta vky.sysctrl.LFSR_CTRL          ; toggle write
-.f2b5		a9 01		lda #$01	        lda #vky.sysctrl.LFSR_ENABLE
-.f2b7		8d a6 d6	sta $d6a6	        sta vky.sysctrl.LFSR_CTRL          ; enable
-.f2ba		60		rts			rts
-.f2bb						generate
-.f2bb		ad a4 d6	lda $d6a4		lda $D6A4
-.f2be		4a		lsr a		        lsr a
-.f2bf		4a		lsr a		        lsr a
-.f2c0		4a		lsr a		        lsr a
-.f2c1		4a		lsr a		        lsr a
-.f2c2		4a		lsr a		        lsr a
-.f2c3		60		rts			rts
+>0011						seed	.fill 4
+.f2cd						init
+.f2cd		8d a4 d6	sta $d6a4	        sta vky.sysctrl.LFSR_DATA_LO       ; store seed
+.f2d0		8d a5 d6	sta $d6a5	        sta vky.sysctrl.LFSR_DATA_HI
+.f2d3		a9 02		lda #$02	        lda #vky.sysctrl.LFSR_SEED_WRITE
+.f2d5		8d a6 d6	sta $d6a6	        sta vky.sysctrl.LFSR_CTRL          ; toggle write
+.f2d8		a9 01		lda #$01	        lda #vky.sysctrl.LFSR_ENABLE
+.f2da		8d a6 d6	sta $d6a6	        sta vky.sysctrl.LFSR_CTRL          ; enable
+.f2dd		60		rts			rts
+.f2de						generate
+.f2de		ad a4 d6	lda $d6a4		lda $D6A4
+.f2e1		4a		lsr a		        lsr a
+.f2e2		4a		lsr a		        lsr a
+.f2e3		4a		lsr a		        lsr a
+.f2e4		4a		lsr a		        lsr a
+.f2e5		4a		lsr a		        lsr a
+.f2e6		60		rts			rts
 
 ;******  Processing input file: src/display.asm
 
@@ -5067,9 +5098,10 @@
 
 ;******  Processing input file: src/defs/io.asm
 
-=$50							CNT_0		= $50
-=$51							CNT_1           = $51
-=$52							VAL     	= $52
+>0015		00					VAL		.byte 0
+=#$10							BUTTON_0_MASK   = #$10
+=#$20							BUTTON_1_MASK   = #$20
+=#$40							BUTTON_2_MASK	= #$40
 =$dc00							VIA0_IRB        = $DC00   ;Joystick 0
 =$dc01							VIA0_IRA        = $DC01   ;Joystick 1
 =$dc02							VIA0_DRB        = $DC02

@@ -45,6 +45,7 @@ musicPlay = Music + 3
         JoyWait         .byte 0        
         CurPosX         .byte 0
         CurPosY         .byte 0
+        ButtonStatus    .byte 0
 .send
 
 .section        yam3g
@@ -174,50 +175,64 @@ InterruptHandlerJoystick .block
         +
                 lda #8
                 sta JoyWait
-                lda io.joy.VIA0_IRB    ; Read VIA Port B to get Joystick Value
-                and #$1F        ; Remove Unwanted bits
-                cmp #$1F        ; Any movement at all?
-                bne process
+                lda io.joy.VIA0_IRB     ; Read VIA Port B to get Joystick Value
+                eor #$FF                ; flip bits
+                and #$7F                ; Remove Unwanted bits
+                bne process             ; if not zero, there is some joy activity
                 stz JoyWait
-                stz io.joy.CNT_0
         done
                 rts
 
         process
-                lda io.joy.VIA0_IRB
-                sta io.joy.VAL
-                and #$04              ; Check what value is cleared
-                beq joyLeft
-
-                lda io.joy.VAL
-                and #$08
-                beq joyRight
-
-                lda io.joy.VAL
-                and #$02
-                beq joyDown
-
-                lda io.joy.VAL
-                and #$01
-                beq joyUp
-
+                sta io.joy.VAL          ; backup for button value checks
+                lsr a                   ; shift Up status into carry
+                bcs joyUp
+                lsr a                   ; shift Down status into carry
+                bcs joyDown
+                lsr a                   ; shift Left status into carry
+                bcs joyLeft
+                lsr a                   ; shift Right status into carry
+                bcs joyRight
         end
-                stz io.joy.CNT_0
                 rts 
 
 joyRight
+                lda io.joy.VAL                 ; restore joy value for button checks
+                and io.joy.BUTTON_0_MASK
+                beq +
+                jsr playfield.swapRight        ; if button 0 is pressed attempt a swap
+        +
+                bcc end                        ; swap failed we're done
                 jsr playfield.cursorRight
                 bra end
 joyLeft
+                lda io.joy.VAL
+                and io.joy.BUTTON_0_MASK
+                beq +
+                jsr playfield.swapLeft
+        +
+                bcc end                        ; swap failed we're done
                 jsr playfield.cursorLeft
                 bra end
 joyDown
+                lda io.joy.VAL
+                and io.joy.BUTTON_0_MASK
+                beq +
+                jsr playfield.swapDown
+        +
+                bcc end                        ; swap failed we're done
                 jsr playfield.cursorDown
                 bra end
 joyUp
+                lda io.joy.VAL
+                and io.joy.BUTTON_0_MASK
+                beq +
+                jsr playfield.swapUp
+                bcc end                        ; swap failed we're done
+        +
                 jsr playfield.cursorUp
-
                 bra end
+
 .bend        ; end block 
 
 .send        ; end section yam3g

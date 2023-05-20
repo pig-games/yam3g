@@ -165,6 +165,62 @@ cursorUp .proc
 .endproc
 
 ;********************************************************************************
+; swapLeft
+;
+; Attempt swap with gem to the left of the cursor.
+;
+; input:
+; output:
+; * C: set if successful swap
+;********************************************************************************
+swapLeft .proc
+        clc
+        rts
+.endproc
+
+;********************************************************************************
+; swapRight
+;
+; Attempt swap with gem to the right of the cursor.
+;
+; input:
+; output:
+; * C: set if successful swap
+;********************************************************************************
+swapRight .proc
+        clc
+        rts
+.endproc
+
+;********************************************************************************
+; swapUp
+;
+; Attempt swap with gem above the cursor.
+;
+; input:
+; output:
+; * C: set if successful swap
+;********************************************************************************
+swapUp .proc
+        clc
+        rts
+.endproc
+
+;********************************************************************************
+; swapDown
+;
+; Attempt swap with gem below the cursor.
+;
+; input:
+; output:
+; * C: set if successful swap
+;********************************************************************************
+swapDown .proc
+        clc
+        rts
+.endproc
+
+;********************************************************************************
 ; generateNew
 ;
 ; Generate new playfield without any matches.
@@ -341,7 +397,7 @@ noMatch
 ;********************************************************************************
 checkVerticalMatch .proc
                 cpx #57                           ; check if we're on the bottom row, if so, no vertical matching is needed
-                bcc notBottomRow
+                blt notBottomRow
                 bra noMatch                       ; if >= 56, we're in the bottom row so no lower matches possible, but maybe horizontal
         notBottomRow
                 ldy #OFF_GEM_BELOW
@@ -408,7 +464,6 @@ updateTileMap .proc
                 dex
                 bne rowLoop
                 #system.resetMMU 1
-
 	rts
 .endproc ; updateTileMap
 
