@@ -188,7 +188,33 @@ swapLeft .proc
 ; * C: set if successful swap
 ;********************************************************************************
 swapRight .proc
-        clc
+                lda CurPosX
+                cmp #6                ; check if we're too far right
+                bge notFound          ; if so we're done, nothing found
+                lda CurPosY
+                asl a                 ; multiply y-pos by 8
+                asl a
+                asl a
+                clc
+                adc CurPosX           ; add x-pos to calculate offset
+                adc #<PlayField       ; add offset to start of playfield
+                sta PlayFieldAddr
+                lda #>PlayField
+                sta PlayFieldAddr+1
+
+                ; start comparing with gem to the right of new position (cur x + 1)
+                lda (PlayFieldAddr)
+                and #7
+                ldy #2
+                eor (PlayFieldAddr),y
+                and #7
+                beq found             ; we found initial match now check for match 3
+        notFound
+                
+                clc
+                rts
+        found
+                sec
         rts
 .endproc
 
