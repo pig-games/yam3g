@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.58.2974? listing file
 ; 64tass --long-address -b -fc -o build/YAM3G.bin --list build/YAM3G.lst --labels=build/YAM3G.lbl src/main.asm src/init.asm src/system.asm src/yam3g.asm src/playfield.asm src/rnd.asm src/display.asm src/audio.asm src/defs/interrupt.asm src/defs/tinyvicky.asm src/defs/io.asm src/textencoding.asm
-; Wed May 24 21:18:41 2023
+; Wed May 24 21:28:56 2023
 
 ;Offset	;PC	;Hex		;Monitor	;Source
 
@@ -4282,7 +4282,7 @@
 .f109		a5 18		lda $18		                lda io.joy.VAL                 ; restore joy value for button checks
 .f10b		29 10		and #$10	                and io.joy.BUTTON_0_MASK
 .f10d		f0 03		beq $f112	                beq +
-.f10f		20 e2 f1	jsr $f1e2	                jsr playfield.swapRight        ; if button 0 is pressed attempt a swap
+.f10f		20 cf f1	jsr $f1cf	                jsr playfield.swapRight        ; if button 0 is pressed attempt a swap
 .f112						        +
 .f112		90 f4		bcc $f108	                bcc end                        ; swap failed we're done
 .f114		20 87 f1	jsr $f187	                jsr playfield.cursorRight
@@ -4300,7 +4300,7 @@
 .f129		a5 18		lda $18		                lda io.joy.VAL
 .f12b		29 10		and #$10	                and io.joy.BUTTON_0_MASK
 .f12d		f0 03		beq $f132	                beq +
-.f12f		20 ca f2	jsr $f2ca	                jsr playfield.swapDown
+.f12f		20 04 f2	jsr $f204	                jsr playfield.swapDown
 .f132						        +
 .f132		90 d4		bcc $f108	                bcc end                        ; swap failed we're done
 .f134		20 9f f1	jsr $f19f	                jsr playfield.cursorDown
@@ -4309,7 +4309,7 @@
 .f139		a5 18		lda $18		                lda io.joy.VAL
 .f13b		29 10		and #$10	                and io.joy.BUTTON_0_MASK
 .f13d		f0 05		beq $f144	                beq +
-.f13f		20 ad f2	jsr $f2ad	                jsr playfield.swapUp
+.f13f		20 e7 f1	jsr $f1e7	                jsr playfield.swapUp
 .f142		90 c4		bcc $f108	                bcc end                        ; swap failed we're done
 .f144						        +
 .f144		20 ac f1	jsr $f1ac	                jsr playfield.cursorUp
@@ -4407,184 +4407,184 @@
 .f1b9		aa		tax		                tax
 .f1ba		a5 0a		lda $0a		                lda CurPosY
 .f1bc		a8		tay		                tay
-.f1bd		20 cf f1	jsr $f1cf	                jsr setPlayFieldAddr
+.f1bd		20 21 f2	jsr $f221	                jsr setPlayFieldAddr
 .f1c0		b2 12		lda ($12)	                lda (PlayFieldAddr)
 .f1c2		85 0f		sta $0f		                sta CurrentGem
-.f1c4		c6 12		dec $12		                dec PlayFieldAddr           ; move PlayFieldAddr to the gem to the right
-.f1c6		a9 fd		lda #$fd	                lda #~CHECK_RIGHT
+.f1c4		c6 12		dec $12		                dec PlayFieldAddr    ; move PlayFieldAddr to the gem to the left
+.f1c6		a9 fd		lda #$fd	                lda #~CHECK_RIGHT    ; check all directions except where we came from
 .f1c8		29 0f		and #$0f	                and #$F
 .f1ca		aa		tax		                tax
-.f1cb		20 fa f1	jsr $f1fa	                jsr checkMatches
+.f1cb		20 34 f2	jsr $f234	                jsr checkMatches
 .f1ce		60		rts		        rts
-.f1cf						setPlayFieldAddr
+.f1cf						swapRight
+.f1cf		a5 09		lda $09		                lda CurPosX
+.f1d1		aa		tax		                tax
+.f1d2		a5 0a		lda $0a		                lda CurPosY
+.f1d4		a8		tay		                tay
+.f1d5		20 21 f2	jsr $f221	                jsr setPlayFieldAddr
+.f1d8		b2 12		lda ($12)	                lda (PlayFieldAddr)
+.f1da		85 0f		sta $0f		                sta CurrentGem
+.f1dc		e6 12		inc $12		                inc PlayFieldAddr   ; move PlayFieldAddr to the gem to the right
+.f1de		a9 fe		lda #$fe	                lda #~CHECK_LEFT    ; check all directions except where we came from
+.f1e0		29 0f		and #$0f	                and #$F
+.f1e2		aa		tax		                tax
+.f1e3		20 34 f2	jsr $f234	                jsr checkMatches
+.f1e6		60		rts		        rts
+.f1e7						swapUp
+.f1e7		a5 09		lda $09		                lda CurPosX
+.f1e9		aa		tax		                tax
+.f1ea		a5 0a		lda $0a		                lda CurPosY
+.f1ec		a8		tay		                tay
+.f1ed		20 21 f2	jsr $f221	                jsr setPlayFieldAddr
+.f1f0		b2 12		lda ($12)	                lda (PlayFieldAddr)
+.f1f2		85 0f		sta $0f		                sta CurrentGem
+.f1f4		a5 12		lda $12		                lda PlayFieldAddr
+.f1f6		38		sec		                sec
+.f1f7		e9 08		sbc #$08	                sbc #8
+.f1f9		85 12		sta $12		                sta PlayFieldAddr   ; move PlayFieldAddr to the gem above
+.f1fb		a9 f7		lda #$f7	                lda #~CHECK_DOWN    ; check all directions except where we came from
+.f1fd		29 0f		and #$0f	                and #$F
+.f1ff		aa		tax		                tax
+.f200		20 34 f2	jsr $f234	                jsr checkMatches
+.f203		60		rts		        rts
+.f204						swapDown
+.f204		a5 09		lda $09		                lda CurPosX
+.f206		aa		tax		                tax
+.f207		a5 0a		lda $0a		                lda CurPosY
+.f209		a8		tay		                tay
+.f20a		20 21 f2	jsr $f221	                jsr setPlayFieldAddr
+.f20d		b2 12		lda ($12)	                lda (PlayFieldAddr)
+.f20f		85 0f		sta $0f		                sta CurrentGem
+.f211		a5 12		lda $12		                lda PlayFieldAddr
+.f213		18		clc		                clc
+.f214		69 08		adc #$08	                adc #8
+.f216		85 12		sta $12		                sta PlayFieldAddr ; move PlayFieldAddr to the gem below
+.f218		a9 fb		lda #$fb	                lda #~CHECK_UP    ; check all directions except where we came from
+.f21a		29 0f		and #$0f	                and #$F
+.f21c		aa		tax		                tax
+.f21d		20 34 f2	jsr $f234	                jsr checkMatches
+.f220		60		rts		        rts
+.f221						setPlayFieldAddr
 =$0c						        Temp = Temp0
-.f1cf		98		tya		                tya
-.f1d0		0a		asl a		                asl a                 ; multiply y-pos by 8
-.f1d1		0a		asl a		                asl a
-.f1d2		0a		asl a		                asl a
-.f1d3		18		clc		                clc
-.f1d4		85 0c		sta $0c		                sta Temp
-.f1d6		8a		txa		                txa
-.f1d7		65 0c		adc $0c		                adc Temp              ; add x-pos to calculate offset
-.f1d9		69 00		adc #$00	                adc #<PlayField       ; add offset to start of playfield
-.f1db		85 12		sta $12		                sta PlayFieldAddr
-.f1dd		a9 e8		lda #$e8	                lda #>PlayField
-.f1df		85 13		sta $13		                sta PlayFieldAddr+1
-.f1e1		60		rts		        rts
-.f1e2						swapRight
-.f1e2		a5 09		lda $09		                lda CurPosX
-.f1e4		aa		tax		                tax
-.f1e5		a5 0a		lda $0a		                lda CurPosY
-.f1e7		a8		tay		                tay
-.f1e8		20 cf f1	jsr $f1cf	                jsr setPlayFieldAddr
-.f1eb		b2 12		lda ($12)	                lda (PlayFieldAddr)
-.f1ed		85 0f		sta $0f		                sta CurrentGem
-.f1ef		e6 12		inc $12		                inc PlayFieldAddr           ; move PlayFieldAddr to the gem to the right
-.f1f1		a9 fe		lda #$fe	                lda #~CHECK_LEFT
-.f1f3		29 0f		and #$0f	                and #$F
-.f1f5		aa		tax		                tax
-.f1f6		20 fa f1	jsr $f1fa	                jsr checkMatches
-.f1f9		60		rts		        rts
-.f1fa						checkMatches
+.f221		98		tya		                tya
+.f222		0a		asl a		                asl a                 ; multiply y-pos by 8
+.f223		0a		asl a		                asl a
+.f224		0a		asl a		                asl a
+.f225		18		clc		                clc
+.f226		85 0c		sta $0c		                sta Temp
+.f228		8a		txa		                txa
+.f229		65 0c		adc $0c		                adc Temp              ; add x-pos to calculate offset
+.f22b		69 00		adc #$00	                adc #<PlayField       ; add offset to start of playfield
+.f22d		85 12		sta $12		                sta PlayFieldAddr
+.f22f		a9 e8		lda #$e8	                lda #>PlayField
+.f231		85 13		sta $13		                sta PlayFieldAddr+1
+.f233		60		rts		        rts
+.f234						checkMatches
 =$0c						        BackupPFA        = Temp0
 =$0d						        HorMatchAmount   = Temp1
 =$0e						        VerMatchAmount   = Temp2
-.f1fa		64 0d		stz $0d		                stz HorMatchAmount
-.f1fc		64 0e		stz $0e		                stz VerMatchAmount
-.f1fe		a5 12		lda $12		                lda PlayFieldAddr
-.f200		85 0c		sta $0c		                sta BackupPFA
-.f202		a5 0f		lda $0f		                lda CurrentGem
-.f204		29 07		and #$07	                and #7
-.f206		52 12		eor ($12)	                eor (PlayFieldAddr)
-.f208		29 07		and #$07	                and #7
-.f20a		d0 02		bne $f20e	                bne checkLeft
-.f20c		18		clc		                clc
-.f20d		60		rts		                rts
-.f20e						        checkLeft
-.f20e		8a		txa		                txa
-.f20f		29 01		and #$01	                and #CHECK_LEFT
-.f211		f0 18		beq $f22b	                beq checkRight
-.f213		a5 09		lda $09		                lda CurPosX
-.f215		f0 14		beq $f22b	                beq checkRight
-.f217		c6 12		dec $12		                dec PlayFieldAddr        ; move playfield addr to the left
-.f219		a5 0f		lda $0f		                lda CurrentGem
-.f21b		29 07		and #$07	                and #7
-.f21d		52 12		eor ($12)	                eor (PlayFieldAddr)
-.f21f		29 07		and #$07	                and #7
-.f221		d0 08		bne $f22b	                bne checkRight
-.f223		e6 0d		inc $0d		                inc HorMatchAmount
-.f225		b2 12		lda ($12)	                lda (PlayFieldAddr)
-.f227		f0 02		beq $f22b	                beq checkRight
-.f229		e6 0d		inc $0d		                inc HorMatchAmount
-.f22b						        checkRight
-.f22b		a5 0c		lda $0c		                lda BackupPFA                ; restore original playfield address
-.f22d		85 12		sta $12		                sta PlayFieldAddr
-.f22f		8a		txa		                txa
-.f230		29 02		and #$02	                and #CHECK_RIGHT
-.f232		f0 1c		beq $f250	                beq checkAbove
-.f234		a5 09		lda $09		                lda CurPosX
-.f236		c9 07		cmp #$07	                cmp #7                ; check if we're too far right
-.f238		f0 16		beq $f250	                beq checkAbove        ; if so we still need to check for vertical match
-.f23a		a5 0f		lda $0f		                lda CurrentGem
-.f23c		29 07		and #$07	                and #7
-.f23e		a0 01		ldy #$01	                ldy #1
-.f240		51 12		eor ($12),y	                eor (PlayFieldAddr),y
+.f234		64 0d		stz $0d		                stz HorMatchAmount
+.f236		64 0e		stz $0e		                stz VerMatchAmount
+.f238		a5 12		lda $12		                lda PlayFieldAddr
+.f23a		85 0c		sta $0c		                sta BackupPFA
+.f23c		a5 0f		lda $0f		                lda CurrentGem
+.f23e		29 07		and #$07	                and #7
+.f240		52 12		eor ($12)	                eor (PlayFieldAddr)
 .f242		29 07		and #$07	                and #7
-.f244		d0 0a		bne $f250	                bne checkAbove        ; we didn't find a horizontal match try vertical
-.f246		e6 0d		inc $0d		                inc HorMatchAmount
-.f248		b1 12		lda ($12),y	                lda (PlayFieldAddr),y
-.f24a		29 40		and #$40	                and #HORIZONTAL_MATCH
-.f24c		f0 02		beq $f250	                beq checkAbove
-.f24e		e6 0d		inc $0d		                inc HorMatchAmount
-.f250						        checkAbove
-.f250		a5 0c		lda $0c		                lda BackupPFA                ; restore original playfield address
-.f252		85 12		sta $12		                sta PlayFieldAddr
-.f254		8a		txa		                txa
-.f255		29 04		and #$04	                and #CHECK_UP
-.f257		f0 1f		beq $f278	                beq checkBelow
-.f259		a5 0a		lda $0a		                lda CurPosY
-.f25b		f0 1b		beq $f278	                beq checkBelow
-.f25d		38		sec		                sec
-.f25e		a5 12		lda $12		                lda PlayFieldAddr
-.f260		e9 08		sbc #$08	                sbc #8
-.f262		85 12		sta $12		                sta PlayFieldAddr
-.f264		b2 12		lda ($12)	                lda (PlayFieldAddr)
-.f266		29 07		and #$07	                and #7
-.f268		45 0f		eor $0f		                eor CurrentGem
-.f26a		29 07		and #$07	                and #7
-.f26c		d0 0a		bne $f278	                bne checkBelow
-.f26e		e6 0e		inc $0e		                inc VerMatchAmount
-.f270		b2 12		lda ($12)	                lda (PlayFieldAddr)
-.f272		29 80		and #$80	                and #VERTICAL_MATCH
-.f274		f0 02		beq $f278	                beq checkBelow
-.f276		e6 0e		inc $0e		                inc VerMatchAmount
-.f278						        checkBelow
-.f278		8a		txa		                txa
-.f279		29 08		and #$08	                and #CHECK_DOWN
-.f27b		f0 20		beq $f29d	                beq checkMatch
-.f27d		a5 0c		lda $0c		                lda BackupPFA                ; restore original playfield address
-.f27f		85 12		sta $12		                sta PlayFieldAddr
-.f281		a5 0a		lda $0a		                lda CurPosY
-.f283		c9 07		cmp #$07	                cmp #7
-.f285		f0 16		beq $f29d	                beq checkMatch
-.f287		a0 08		ldy #$08	                ldy #8
-.f289		a5 0f		lda $0f		                lda CurrentGem
-.f28b		29 07		and #$07	                and #7
-.f28d		51 12		eor ($12),y	                eor (PlayFieldAddr),y
-.f28f		29 07		and #$07	                and #7
-.f291		d0 0a		bne $f29d	                bne checkMatch
-.f293		e6 0e		inc $0e		                inc VerMatchAmount
-.f295		b1 12		lda ($12),y	                lda (PlayFieldAddr),y
-.f297		29 80		and #$80	                and #VERTICAL_MATCH
-.f299		f0 02		beq $f29d	                beq checkMatch
-.f29b		e6 0e		inc $0e		                inc VerMatchAmount
-.f29d						        checkMatch
-.f29d		a5 0d		lda $0d		                lda HorMatchAmount
-.f29f		c9 02		cmp #$02	                cmp #2
-.f2a1		b0 06		bcs $f2a9	                bge found
-.f2a3		a5 0e		lda $0e		                lda VerMatchAmount
-.f2a5		c9 02		cmp #$02	                cmp #2
-.f2a7		90 02		bcc $f2ab	                blt notFound
-.f2a9						        found
-.f2a9		38		sec		                sec
-.f2aa		60		rts		                rts
-.f2ab						        notFound
-.f2ab		18		clc		                clc
-.f2ac		60		rts		                rts
-.f2ad						swapUp
-.f2ad		a5 09		lda $09		                lda CurPosX
-.f2af		aa		tax		                tax
-.f2b0		a5 0a		lda $0a		                lda CurPosY
-.f2b2		a8		tay		                tay
-.f2b3		20 cf f1	jsr $f1cf	                jsr setPlayFieldAddr
-.f2b6		b2 12		lda ($12)	                lda (PlayFieldAddr)
-.f2b8		85 0f		sta $0f		                sta CurrentGem
-.f2ba		a5 12		lda $12		                lda PlayFieldAddr
-.f2bc		38		sec		                sec
-.f2bd		e9 08		sbc #$08	                sbc #8
-.f2bf		85 12		sta $12		                sta PlayFieldAddr           ; move PlayFieldAddr to the gem to the right
-.f2c1		a9 f7		lda #$f7	                lda #~CHECK_DOWN
-.f2c3		29 0f		and #$0f	                and #$F
-.f2c5		aa		tax		                tax
-.f2c6		20 fa f1	jsr $f1fa	                jsr checkMatches
-.f2c9		60		rts		        rts
-.f2ca						swapDown
-.f2ca		a5 09		lda $09		                lda CurPosX
-.f2cc		aa		tax		                tax
-.f2cd		a5 0a		lda $0a		                lda CurPosY
-.f2cf		a8		tay		                tay
-.f2d0		20 cf f1	jsr $f1cf	                jsr setPlayFieldAddr
-.f2d3		b2 12		lda ($12)	                lda (PlayFieldAddr)
-.f2d5		85 0f		sta $0f		                sta CurrentGem
-.f2d7		a5 12		lda $12		                lda PlayFieldAddr
-.f2d9		18		clc		                clc
-.f2da		69 08		adc #$08	                adc #8
-.f2dc		85 12		sta $12		                sta PlayFieldAddr           ; move PlayFieldAddr to the gem to the right
-.f2de		a9 fb		lda #$fb	                lda #~CHECK_UP
-.f2e0		29 0f		and #$0f	                and #$F
-.f2e2		aa		tax		                tax
-.f2e3		20 fa f1	jsr $f1fa	                jsr checkMatches
-.f2e6		60		rts		        rts
+.f244		d0 02		bne $f248	                bne checkLeft
+.f246		18		clc		                clc
+.f247		60		rts		                rts
+.f248						        checkLeft
+.f248		8a		txa		                txa
+.f249		29 01		and #$01	                and #CHECK_LEFT
+.f24b		f0 18		beq $f265	                beq checkRight
+.f24d		a5 09		lda $09		                lda CurPosX
+.f24f		f0 14		beq $f265	                beq checkRight
+.f251		c6 12		dec $12		                dec PlayFieldAddr        ; move playfield addr to the left
+.f253		a5 0f		lda $0f		                lda CurrentGem
+.f255		29 07		and #$07	                and #7
+.f257		52 12		eor ($12)	                eor (PlayFieldAddr)
+.f259		29 07		and #$07	                and #7
+.f25b		d0 08		bne $f265	                bne checkRight
+.f25d		e6 0d		inc $0d		                inc HorMatchAmount
+.f25f		b2 12		lda ($12)	                lda (PlayFieldAddr)
+.f261		f0 02		beq $f265	                beq checkRight
+.f263		e6 0d		inc $0d		                inc HorMatchAmount
+.f265						        checkRight
+.f265		a5 0c		lda $0c		                lda BackupPFA                ; restore original playfield address
+.f267		85 12		sta $12		                sta PlayFieldAddr
+.f269		8a		txa		                txa
+.f26a		29 02		and #$02	                and #CHECK_RIGHT
+.f26c		f0 1c		beq $f28a	                beq checkAbove
+.f26e		a5 09		lda $09		                lda CurPosX
+.f270		c9 07		cmp #$07	                cmp #7                ; check if we're too far right
+.f272		f0 16		beq $f28a	                beq checkAbove        ; if so we still need to check for vertical match
+.f274		a5 0f		lda $0f		                lda CurrentGem
+.f276		29 07		and #$07	                and #7
+.f278		a0 01		ldy #$01	                ldy #1
+.f27a		51 12		eor ($12),y	                eor (PlayFieldAddr),y
+.f27c		29 07		and #$07	                and #7
+.f27e		d0 0a		bne $f28a	                bne checkAbove        ; we didn't find a horizontal match try vertical
+.f280		e6 0d		inc $0d		                inc HorMatchAmount
+.f282		b1 12		lda ($12),y	                lda (PlayFieldAddr),y
+.f284		29 40		and #$40	                and #HORIZONTAL_MATCH
+.f286		f0 02		beq $f28a	                beq checkAbove
+.f288		e6 0d		inc $0d		                inc HorMatchAmount
+.f28a						        checkAbove
+.f28a		a5 0c		lda $0c		                lda BackupPFA                ; restore original playfield address
+.f28c		85 12		sta $12		                sta PlayFieldAddr
+.f28e		8a		txa		                txa
+.f28f		29 04		and #$04	                and #CHECK_UP
+.f291		f0 1f		beq $f2b2	                beq checkBelow
+.f293		a5 0a		lda $0a		                lda CurPosY
+.f295		f0 1b		beq $f2b2	                beq checkBelow
+.f297		38		sec		                sec
+.f298		a5 12		lda $12		                lda PlayFieldAddr
+.f29a		e9 08		sbc #$08	                sbc #8
+.f29c		85 12		sta $12		                sta PlayFieldAddr
+.f29e		b2 12		lda ($12)	                lda (PlayFieldAddr)
+.f2a0		29 07		and #$07	                and #7
+.f2a2		45 0f		eor $0f		                eor CurrentGem
+.f2a4		29 07		and #$07	                and #7
+.f2a6		d0 0a		bne $f2b2	                bne checkBelow
+.f2a8		e6 0e		inc $0e		                inc VerMatchAmount
+.f2aa		b2 12		lda ($12)	                lda (PlayFieldAddr)
+.f2ac		29 80		and #$80	                and #VERTICAL_MATCH
+.f2ae		f0 02		beq $f2b2	                beq checkBelow
+.f2b0		e6 0e		inc $0e		                inc VerMatchAmount
+.f2b2						        checkBelow
+.f2b2		8a		txa		                txa
+.f2b3		29 08		and #$08	                and #CHECK_DOWN
+.f2b5		f0 20		beq $f2d7	                beq checkMatch
+.f2b7		a5 0c		lda $0c		                lda BackupPFA                ; restore original playfield address
+.f2b9		85 12		sta $12		                sta PlayFieldAddr
+.f2bb		a5 0a		lda $0a		                lda CurPosY
+.f2bd		c9 07		cmp #$07	                cmp #7
+.f2bf		f0 16		beq $f2d7	                beq checkMatch
+.f2c1		a0 08		ldy #$08	                ldy #8
+.f2c3		a5 0f		lda $0f		                lda CurrentGem
+.f2c5		29 07		and #$07	                and #7
+.f2c7		51 12		eor ($12),y	                eor (PlayFieldAddr),y
+.f2c9		29 07		and #$07	                and #7
+.f2cb		d0 0a		bne $f2d7	                bne checkMatch
+.f2cd		e6 0e		inc $0e		                inc VerMatchAmount
+.f2cf		b1 12		lda ($12),y	                lda (PlayFieldAddr),y
+.f2d1		29 80		and #$80	                and #VERTICAL_MATCH
+.f2d3		f0 02		beq $f2d7	                beq checkMatch
+.f2d5		e6 0e		inc $0e		                inc VerMatchAmount
+.f2d7						        checkMatch
+.f2d7		a5 0d		lda $0d		                lda HorMatchAmount
+.f2d9		c9 02		cmp #$02	                cmp #2
+.f2db		b0 06		bcs $f2e3	                bge found
+.f2dd		a5 0e		lda $0e		                lda VerMatchAmount
+.f2df		c9 02		cmp #$02	                cmp #2
+.f2e1		90 02		bcc $f2e5	                blt notFound
+.f2e3						        found
+.f2e3		38		sec		                sec
+.f2e4		60		rts		                rts
+.f2e5						        notFound
+.f2e5		18		clc		                clc
+.f2e6		60		rts		                rts
 .f2e7						generateNew
 .f2e7		a9 07		lda #$07	                lda #7
 .f2e9		20 f5 f3	jsr $f3f5	                jsr rnd.init                        ;Galois24o

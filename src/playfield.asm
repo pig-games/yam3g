@@ -175,6 +175,8 @@ cursorUp .proc
 ; Attempt swap with gem to the left of the cursor.
 ;
 ; input:
+; * CurPosX
+; * CurPosY
 ; output:
 ; * C: set if successful swap
 ;********************************************************************************
@@ -186,29 +188,12 @@ swapLeft .proc
                 jsr setPlayFieldAddr
                 lda (PlayFieldAddr)
                 sta CurrentGem
-                dec PlayFieldAddr           ; move PlayFieldAddr to the gem to the right
+                dec PlayFieldAddr    ; move PlayFieldAddr to the gem to the left
                 
-                lda #~CHECK_RIGHT
+                lda #~CHECK_RIGHT    ; check all directions except where we came from
                 and #$F
                 tax
                 jsr checkMatches
-        rts
-.endproc
-
-setPlayFieldAddr .proc
-        Temp = Temp0
-                tya
-                asl a                 ; multiply y-pos by 8
-                asl a
-                asl a
-                clc
-                sta Temp
-                txa
-                adc Temp              ; add x-pos to calculate offset
-                adc #<PlayField       ; add offset to start of playfield
-                sta PlayFieldAddr
-                lda #>PlayField
-                sta PlayFieldAddr+1
         rts
 .endproc
 
@@ -218,6 +203,8 @@ setPlayFieldAddr .proc
 ; Attempt swap with gem to the right of the cursor.
 ;
 ; input:
+; * CurPosX
+; * CurPosY
 ; output:
 ; * C: set if successful swap
 ;********************************************************************************
@@ -229,9 +216,9 @@ swapRight .proc
                 jsr setPlayFieldAddr
                 lda (PlayFieldAddr)
                 sta CurrentGem
-                inc PlayFieldAddr           ; move PlayFieldAddr to the gem to the right
+                inc PlayFieldAddr   ; move PlayFieldAddr to the gem to the right
                 
-                lda #~CHECK_LEFT
+                lda #~CHECK_LEFT    ; check all directions except where we came from
                 and #$F
                 tax
                 jsr checkMatches
@@ -244,6 +231,8 @@ swapRight .proc
 ; Attempt swap with gem above the cursor.
 ;
 ; input:
+; * CurPosX
+; * CurPosY
 ; output:
 ; * C: set if successful swap
 ;********************************************************************************
@@ -258,9 +247,9 @@ swapUp .proc
                 lda PlayFieldAddr
                 sec
                 sbc #8
-                sta PlayFieldAddr           ; move PlayFieldAddr to the gem to the right
+                sta PlayFieldAddr   ; move PlayFieldAddr to the gem above
                 
-                lda #~CHECK_DOWN
+                lda #~CHECK_DOWN    ; check all directions except where we came from
                 and #$F
                 tax
                 jsr checkMatches
@@ -273,6 +262,8 @@ swapUp .proc
 ; Attempt swap with gem below the cursor.
 ;
 ; input:
+; * CurPosX
+; * CurPosY
 ; output:
 ; * C: set if successful swap
 ;********************************************************************************
@@ -287,12 +278,40 @@ swapDown .proc
                 lda PlayFieldAddr
                 clc
                 adc #8
-                sta PlayFieldAddr           ; move PlayFieldAddr to the gem to the right
+                sta PlayFieldAddr ; move PlayFieldAddr to the gem below
                 
-                lda #~CHECK_UP
+                lda #~CHECK_UP    ; check all directions except where we came from
                 and #$F
                 tax
                 jsr checkMatches
+        rts
+.endproc
+
+;********************************************************************************
+; setPlayFieldAddr
+;
+; Sets the PlayFieldAddr ptr for the given X, Y coordinates.
+;
+; input:
+; * X: x-coordinate
+; * Y: y-coordinate
+; output:
+; * PlayFieldAddr(+1) contains the address for the gem at X, Y.
+;********************************************************************************
+setPlayFieldAddr .proc
+        Temp = Temp0
+                tya
+                asl a                 ; multiply y-pos by 8
+                asl a
+                asl a
+                clc
+                sta Temp
+                txa
+                adc Temp              ; add x-pos to calculate offset
+                adc #<PlayField       ; add offset to start of playfield
+                sta PlayFieldAddr
+                lda #>PlayField
+                sta PlayFieldAddr+1
         rts
 .endproc
 
