@@ -18,6 +18,7 @@ VERTICAL_MATCH   = %10000000
 OFF_GEM_MN       = 0
 OFF_GEM_RIGHT    = 1
 OFF_GEM_BELOW    = 8
+Temp             = Temp0
 
 .section data
         .align $100
@@ -28,7 +29,6 @@ OFF_GEM_BELOW    = 8
 .section dp
 	TileAddr        .fill 2
 	PlayFieldAddr   .fill 2
-	Temp            .byte 0
 .endsection
 
 .section yam3g
@@ -184,13 +184,19 @@ swapLeft .proc
 ; Attempt swap with gem to the right of the cursor.
 ;
 ; input:
+; * CurPosX: current cursor x position
+; * CurPosY: current cursor y position
+; * X : direction of swap (bit 0-3 represent: Left, Right, Up, Down. If set this direction is checked)
 ; output:
 ; * C: set if successful swap
 ;********************************************************************************
 swapRight .proc
-                lda CurPosX
-                cmp #6                ; check if we're too far right
-                bge notFound          ; if so we're done, nothing found
+        BackupPFA        = Temp0
+        HorMatchAmount   = Temp1
+        VerMatchAmount   = Temp2
+        CurrentGem       = Temp3
+                stz HorMatchAmount
+                stz VerMatchAmount
                 lda CurPosY
                 asl a                 ; multiply y-pos by 8
                 asl a
@@ -199,23 +205,78 @@ swapRight .proc
                 adc CurPosX           ; add x-pos to calculate offset
                 adc #<PlayField       ; add offset to start of playfield
                 sta PlayFieldAddr
+                sta BackupPFA
                 lda #>PlayField
                 sta PlayFieldAddr+1
-
                 ; start comparing with gem to the right of new position (cur x + 1)
                 lda (PlayFieldAddr)
+                sta CurrentGem
+                and #7
+                ldy #1
+                eor (PlayFieldAddr),y
+                and #7
+                beq notFound
+                lda CurPosX
+                cmp #7                ; check if we're too far right
+                beq checkAbove        ; if so we still need to check for vertical match
+                lda CurrentGem
                 and #7
                 ldy #2
                 eor (PlayFieldAddr),y
                 and #7
-                beq found             ; we found initial match now check for match 3
-        notFound
-                
-                clc
-                rts
+                bne checkAbove           ; we didn't find a horizontal match try vertical
+                inc HorMatchAmount
+                lda (PlayFieldAddr),y
+                and #HORIZONTAL_MATCH
+                beq checkAbove
+                inc HorMatchAmount
+        checkAbove
+                lda CurPosY
+                beq checkBelow
+                sec
+                lda PlayFieldAddr
+                sbc #7
+                sta PlayFieldAddr
+                lda (PlayFieldAddr)
+                and #7
+                eor CurrentGem
+                and #7
+                bne checkBelow
+                inc VerMatchAmount
+                lda (PlayFieldAddr)
+                and #VERTICAL_MATCH
+                beq checkBelow
+                inc VerMatchAmount
+        checkBelow
+                lda BackupPFA                ; restore original playfield address
+                sta PlayFieldAddr
+                lda CurPosY
+                cmp #7
+                beq checkMatch
+                ldy #9
+                lda CurrentGem
+                and #7
+                eor (PlayFieldAddr),y
+                and #7
+                bne checkMatch
+                inc VerMatchAmount
+                lda (PlayFieldAddr),y
+                and #VERTICAL_MATCH
+                beq checkMatch
+                inc VerMatchAmount
+        checkMatch
+                lda HorMatchAmount
+                cmp #2
+                bge found
+                lda VerMatchAmount
+                cmp #2
+                blt notFound
         found
                 sec
-        rts
+                rts
+        notFound
+                clc
+                rts
 .endproc
 
 ;********************************************************************************

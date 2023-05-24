@@ -46,6 +46,10 @@ musicPlay = Music + 3
         CurPosX         .byte 0
         CurPosY         .byte 0
         ButtonStatus    .byte 0
+        Temp0           .byte 0
+        Temp1           .byte 0
+        Temp2           .byte 0
+        Temp3           .byte 0
 .send
 
 .section        yam3g
