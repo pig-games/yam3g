@@ -15,10 +15,15 @@ PlayFieldYSize = 8
 
 HORIZONTAL_MATCH = %01000000
 VERTICAL_MATCH   = %10000000
+CHECK_LEFT       = %00000001
+CHECK_RIGHT      = %00000010
+CHECK_UP         = %00000100
+CHECK_DOWN       = %00001000
 OFF_GEM_MN       = 0
 OFF_GEM_RIGHT    = 1
 OFF_GEM_BELOW    = 8
 Temp             = Temp0
+CurrentGem       = Temp3
 
 .section data
         .align $100
@@ -174,7 +179,36 @@ cursorUp .proc
 ; * C: set if successful swap
 ;********************************************************************************
 swapLeft .proc
-        clc
+                lda CurPosX
+                tax
+                lda CurPosY
+                tay
+                jsr setPlayFieldAddr
+                lda (PlayFieldAddr)
+                sta CurrentGem
+                dec PlayFieldAddr           ; move PlayFieldAddr to the gem to the right
+                
+                lda #~CHECK_RIGHT
+                and #$F
+                tax
+                jsr checkMatches
+        rts
+.endproc
+
+setPlayFieldAddr .proc
+        Temp = Temp0
+                tya
+                asl a                 ; multiply y-pos by 8
+                asl a
+                asl a
+                clc
+                sta Temp
+                txa
+                adc Temp              ; add x-pos to calculate offset
+                adc #<PlayField       ; add offset to start of playfield
+                sta PlayFieldAddr
+                lda #>PlayField
+                sta PlayFieldAddr+1
         rts
 .endproc
 
@@ -184,58 +218,165 @@ swapLeft .proc
 ; Attempt swap with gem to the right of the cursor.
 ;
 ; input:
-; * CurPosX: current cursor x position
-; * CurPosY: current cursor y position
-; * X : direction of swap (bit 0-3 represent: Left, Right, Up, Down. If set this direction is checked)
 ; output:
 ; * C: set if successful swap
 ;********************************************************************************
 swapRight .proc
+                lda CurPosX
+                tax
+                lda CurPosY
+                tay
+                jsr setPlayFieldAddr
+                lda (PlayFieldAddr)
+                sta CurrentGem
+                inc PlayFieldAddr           ; move PlayFieldAddr to the gem to the right
+                
+                lda #~CHECK_LEFT
+                and #$F
+                tax
+                jsr checkMatches
+        rts
+.endproc
+
+;********************************************************************************
+; swapUp
+;
+; Attempt swap with gem above the cursor.
+;
+; input:
+; output:
+; * C: set if successful swap
+;********************************************************************************
+swapUp .proc
+                lda CurPosX
+                tax
+                lda CurPosY
+                tay
+                jsr setPlayFieldAddr
+                lda (PlayFieldAddr)
+                sta CurrentGem
+                lda PlayFieldAddr
+                sec
+                sbc #8
+                sta PlayFieldAddr           ; move PlayFieldAddr to the gem to the right
+                
+                lda #~CHECK_DOWN
+                and #$F
+                tax
+                jsr checkMatches
+        rts
+.endproc
+
+;********************************************************************************
+; swapDown
+;
+; Attempt swap with gem below the cursor.
+;
+; input:
+; output:
+; * C: set if successful swap
+;********************************************************************************
+swapDown .proc
+                lda CurPosX
+                tax
+                lda CurPosY
+                tay
+                jsr setPlayFieldAddr
+                lda (PlayFieldAddr)
+                sta CurrentGem
+                lda PlayFieldAddr
+                clc
+                adc #8
+                sta PlayFieldAddr           ; move PlayFieldAddr to the gem to the right
+                
+                lda #~CHECK_UP
+                and #$F
+                tax
+                jsr checkMatches
+        rts
+.endproc
+
+;********************************************************************************
+; checkMatches
+;
+; check for matches around a target gem.
+;
+; input:
+; * CurrentGem: current gem number
+; * X: directions to check (bit 0-3 represent: Left, Right, Up, Down. If set this direction is checked)
+; output:
+; * C: set if successful swap
+;********************************************************************************
+checkMatches .proc
         BackupPFA        = Temp0
         HorMatchAmount   = Temp1
         VerMatchAmount   = Temp2
-        CurrentGem       = Temp3
                 stz HorMatchAmount
                 stz VerMatchAmount
-                lda CurPosY
-                asl a                 ; multiply y-pos by 8
-                asl a
-                asl a
-                clc
-                adc CurPosX           ; add x-pos to calculate offset
-                adc #<PlayField       ; add offset to start of playfield
-                sta PlayFieldAddr
+
+                lda PlayFieldAddr
                 sta BackupPFA
-                lda #>PlayField
-                sta PlayFieldAddr+1
-                ; start comparing with gem to the right of new position (cur x + 1)
+
+        ; check if target gem is the same as the current, if so we're done
+                lda CurrentGem
+                and #7
+                eor (PlayFieldAddr)
+                and #7
+                bne checkLeft
+                clc
+                rts
+        checkLeft
+                txa
+                and #CHECK_LEFT
+                beq checkRight
+                
+                lda CurPosX
+                beq checkRight
+                dec PlayFieldAddr        ; move playfield addr to the left
+
+                lda CurrentGem
+                and #7
+                eor (PlayFieldAddr)
+                and #7
+                bne checkRight
+                inc HorMatchAmount
                 lda (PlayFieldAddr)
-                sta CurrentGem
-                and #7
-                ldy #1
-                eor (PlayFieldAddr),y
-                and #7
-                beq notFound
+                beq checkRight
+                inc HorMatchAmount
+        checkRight
+                lda BackupPFA                ; restore original playfield address
+                sta PlayFieldAddr
+
+                txa
+                and #CHECK_RIGHT
+                beq checkAbove
+
                 lda CurPosX
                 cmp #7                ; check if we're too far right
                 beq checkAbove        ; if so we still need to check for vertical match
                 lda CurrentGem
                 and #7
-                ldy #2
+                ldy #1
                 eor (PlayFieldAddr),y
                 and #7
-                bne checkAbove           ; we didn't find a horizontal match try vertical
+                bne checkAbove        ; we didn't find a horizontal match try vertical
                 inc HorMatchAmount
                 lda (PlayFieldAddr),y
                 and #HORIZONTAL_MATCH
                 beq checkAbove
                 inc HorMatchAmount
         checkAbove
+                lda BackupPFA                ; restore original playfield address
+                sta PlayFieldAddr
+
+                txa
+                and #CHECK_UP
+                beq checkBelow
                 lda CurPosY
                 beq checkBelow
                 sec
                 lda PlayFieldAddr
-                sbc #7
+                sbc #8
                 sta PlayFieldAddr
                 lda (PlayFieldAddr)
                 and #7
@@ -248,12 +389,16 @@ swapRight .proc
                 beq checkBelow
                 inc VerMatchAmount
         checkBelow
+                txa
+                and #CHECK_DOWN
+                beq checkMatch
+                
                 lda BackupPFA                ; restore original playfield address
                 sta PlayFieldAddr
                 lda CurPosY
                 cmp #7
                 beq checkMatch
-                ldy #9
+                ldy #8
                 lda CurrentGem
                 and #7
                 eor (PlayFieldAddr),y
@@ -277,34 +422,6 @@ swapRight .proc
         notFound
                 clc
                 rts
-.endproc
-
-;********************************************************************************
-; swapUp
-;
-; Attempt swap with gem above the cursor.
-;
-; input:
-; output:
-; * C: set if successful swap
-;********************************************************************************
-swapUp .proc
-        clc
-        rts
-.endproc
-
-;********************************************************************************
-; swapDown
-;
-; Attempt swap with gem below the cursor.
-;
-; input:
-; output:
-; * C: set if successful swap
-;********************************************************************************
-swapDown .proc
-        clc
-        rts
 .endproc
 
 ;********************************************************************************
