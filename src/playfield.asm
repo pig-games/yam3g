@@ -360,6 +360,7 @@ checkMatches .proc
                 bne checkRight
                 inc HorMatchAmount
                 lda (PlayFieldAddr)
+                and #HORIZONTAL_MATCH
                 beq checkRight
                 inc HorMatchAmount
         checkRight
