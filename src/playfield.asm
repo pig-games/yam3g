@@ -181,10 +181,7 @@ cursorUp .proc
 ; * C: set if successful swap
 ;********************************************************************************
 swapLeft .proc
-                lda CurPosX
-                tax
-                lda CurPosY
-                tay
+                #loadXY CurPosX, CurPosY
                 jsr setPlayFieldAddr
                 lda (PlayFieldAddr)
                 sta CurrentGem
@@ -209,10 +206,7 @@ swapLeft .proc
 ; * C: set if successful swap
 ;********************************************************************************
 swapRight .proc
-                lda CurPosX
-                tax
-                lda CurPosY
-                tay
+                #loadXY CurPosX, CurPosY
                 jsr setPlayFieldAddr
                 lda (PlayFieldAddr)
                 sta CurrentGem
@@ -237,10 +231,7 @@ swapRight .proc
 ; * C: set if successful swap
 ;********************************************************************************
 swapUp .proc
-                lda CurPosX
-                tax
-                lda CurPosY
-                tay
+                #loadXY CurPosX, CurPosY
                 jsr setPlayFieldAddr
                 lda (PlayFieldAddr)
                 sta CurrentGem
@@ -268,10 +259,7 @@ swapUp .proc
 ; * C: set if successful swap
 ;********************************************************************************
 swapDown .proc
-                lda CurPosX
-                tax
-                lda CurPosY
-                tay
+                #loadXY CurPosX, CurPosY
                 jsr setPlayFieldAddr
                 lda (PlayFieldAddr)
                 sta CurrentGem
@@ -286,6 +274,25 @@ swapDown .proc
                 jsr checkMatches
         rts
 .endproc
+
+;********************************************************************************
+; #loadXY x, y (Macro)
+;
+; Load x, y values into the X and Y registers.
+;
+; input:
+; * x: x-value using any addressing mode available to 'lda'
+; * y: y-value using any addressing mode available to 'lda'
+; output:
+; * X
+; * Y
+;********************************************************************************
+loadXY .macro x, y
+                lda \x
+                tax
+                lda \y
+                tay
+.endmacro
 
 ;********************************************************************************
 ; setPlayFieldAddr
