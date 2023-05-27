@@ -36,16 +36,14 @@ musicPlay = Music + 3
 ; Start of actual yam3g code
 
 .section dp
-        L0ScrollXL      .byte 0
-        L0ScrollXH      .byte 0
-        L1ScrollXL      .byte 0
-        L1ScrollXH      .byte 0
-        L2ScrollXL      .byte 0
-        L2ScrollXH      .byte 0
         JoyWait         .byte 0        
         CurPosX         .byte 0
         CurPosY         .byte 0
         ButtonStatus    .byte 0
+        Score0          .byte 0
+        Score1          .byte 0
+        Score2          .byte 0
+        Score3          .byte 0
         Temp0           .byte 0
         Temp1           .byte 0
         Temp2           .byte 0
@@ -159,6 +157,7 @@ setLUT0_4_Tiles2
                 sta vky.tile.T1_CONTROL_REG  ; Enable Layer1
                 sta vky.tile.T2_CONTROL_REG  ; Enable Layer2
                 jsr playfield.initCursor
+                jsr playfield.resetScore
                 ; generate random tiles for map 1
                 jsr playfield.generateNew
                 jsr playfield.updateTileMap
@@ -205,8 +204,9 @@ joyRight
                 and io.joy.BUTTON_0_MASK
                 beq +
                 jsr playfield.swapRight        ; if button 0 is pressed attempt a swap
+                bcc end
+                jsr playfield.updateScore
         +
-                bcc end                        ; swap failed we're done
                 jsr playfield.cursorRight
                 bra end
 joyLeft
@@ -214,8 +214,9 @@ joyLeft
                 and io.joy.BUTTON_0_MASK
                 beq +
                 jsr playfield.swapLeft
+                bcc end
+                jsr playfield.updateScore
         +
-                bcc end                        ; swap failed we're done
                 jsr playfield.cursorLeft
                 bra end
 joyDown
@@ -223,8 +224,9 @@ joyDown
                 and io.joy.BUTTON_0_MASK
                 beq +
                 jsr playfield.swapDown
+                bcc end
+                jsr playfield.updateScore
         +
-                bcc end                        ; swap failed we're done
                 jsr playfield.cursorDown
                 bra end
 joyUp
@@ -233,6 +235,7 @@ joyUp
                 beq +
                 jsr playfield.swapUp
                 bcc end                        ; swap failed we're done
+                jsr playfield.updateScore
         +
                 jsr playfield.cursorUp
                 bra end

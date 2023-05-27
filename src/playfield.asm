@@ -3,7 +3,7 @@
 ;
 ; Routines for generation and manipulation of YAM3G playfields.
 ;
-; date:        2023-05-10
+; date:        2023-05-25
 ; created by:  PIG Games (Erik van der Tier)
 ; license:     MIT
 ;********************************************************************************
@@ -39,6 +39,62 @@ CurrentGem       = Temp3
 .section yam3g
 
 ;********************************************************************************
+; resetScore
+;
+; Resets the player score.
+;
+; input:
+; output:
+;********************************************************************************
+resetScore .proc
+                stz Score0
+                stz Score1
+                stz Score2
+                stz Score3
+                jsr displayScore                
+        rts
+.endproc
+
+;********************************************************************************
+; updateScore
+;
+; Updates the player score based on number of matches.
+;
+; input:
+; * X: horizontal number of matches
+; * Y: vertical number of matches
+; output:
+;********************************************************************************
+updateScore .proc
+        TotalMatches = Temp0     ; used as temp storage for adding the horizontal and vertical match counts
+                stz TotalMatches
+        sed
+                txa              ; get horizontal number of matches
+                clc
+                adc TotalMatches
+                sta TotalMatches
+                tya              ; get vertical number of matches
+                clc
+                adc TotalMatches
+                inc a            ; increase with one to count the swapped gem
+                clc
+                adc Score0       ; add match count and overflow to other 'positions'
+                sta Score0
+                lda #0
+                adc Score1
+                sta Score1
+                lda #0
+                adc Score2
+                sta Score2
+                lda #0
+                adc Score3
+                sta Score3
+        cld
+                jsr displayScore
+        rts
+.endproc
+
+;********************************************************************************
 ; initCursor
 ;
 ; Initialises the Cursor.
@@ -59,6 +115,8 @@ initCursor .proc
                 lda #vky.sprite.ENABLE | vky.sprite.LUT0 | vky.sprite.SIZE_16 | vky.sprite.DEPTH_L3
                 sta vky.sprite.SP0_Ctrl
 
+                stz CurPosX
+                stz CurPosY
                 stz vky.sprite.SP0_X_H
                 stz vky.sprite.SP0_Y_H
                 lda #32+6*16
@@ -188,7 +246,6 @@ swapLeft .proc
                 dec PlayFieldAddr    ; move PlayFieldAddr to the gem to the left
                 
                 lda #~CHECK_RIGHT    ; check all directions except where we came from
-                and #$F
                 tax
                 jsr checkMatches
         rts
@@ -213,7 +270,6 @@ swapRight .proc
                 inc PlayFieldAddr   ; move PlayFieldAddr to the gem to the right
                 
                 lda #~CHECK_LEFT    ; check all directions except where we came from
-                and #$F
                 tax
                 jsr checkMatches
         rts
@@ -241,7 +297,6 @@ swapUp .proc
                 sta PlayFieldAddr   ; move PlayFieldAddr to the gem above
                 
                 lda #~CHECK_DOWN    ; check all directions except where we came from
-                and #$F
                 tax
                 jsr checkMatches
         rts
@@ -269,7 +324,6 @@ swapDown .proc
                 sta PlayFieldAddr ; move PlayFieldAddr to the gem below
                 
                 lda #~CHECK_UP    ; check all directions except where we came from
-                and #$F
                 tax
                 jsr checkMatches
         rts
@@ -331,6 +385,8 @@ setPlayFieldAddr .proc
 ; * CurrentGem: current gem number
 ; * X: directions to check (bit 0-3 represent: Left, Right, Up, Down. If set this direction is checked)
 ; output:
+; * X: number of horizontal matches
+; * Y: number of vertical matches
 ; * C: set if successful swap
 ;********************************************************************************
 checkMatches .proc
@@ -437,11 +493,11 @@ checkMatches .proc
                 beq checkMatch
                 inc VerMatchAmount
         checkMatch
-                lda HorMatchAmount
-                cmp #2
+                ldx HorMatchAmount
+                ldy VerMatchAmount
+                cpx #2
                 bge found
-                lda VerMatchAmount
-                cmp #2
+                cpy #2
                 blt notFound
         found
                 sec
@@ -697,6 +753,53 @@ updateTileMap .proc
                 #system.resetMMU 1
 	rts
 .endproc ; updateTileMap
+
+;********************************************************************************
+; displayScore
+;
+; Displays the current score.
+;
+; input:
+; output:
+;********************************************************************************
+displayScore .proc
+        ScorePtr = Temp0
+                ; setup mmu for tile map access
+                #system.setMMU 1, 8
+
+                stz TileAddr        ; set TileAddr to start of playfield (top-left)
+                lda #$25
+                sta TileAddr+1
+
+                ldx #4              ; 4 sets of two digits
+                ldy #2              ; x-position of start of score (2 bytes per tile)
+                lda #Score3         ; get address of highest score value
+                sta ScorePtr        ; store in ScorePtr
+                stz ScorePtr+1
+        loop                        ; we'll loop over --x and display two digits (bcd => two digits per byte)
+                lda (ScorePtr)      ; load score digits (2)
+                lsr                 ; shift 4 to right to get the high nibble (the highest digit of the score)
+                lsr
+                lsr
+                lsr
+                clc
+                adc #$10            ; add $10 which is the offset to the 0 character tile
+                sta (TileAddr),y    ; store at position y (display at position Y)
+                iny                 ; move to next tile position
+                iny
+                lda (ScorePtr)      ; reload score digits 
+                and #$F             ; mask of all but first 4 bits (the lower nibble of the score byte)
+                clc
+                adc #$10            ; add $10 again
+                sta (TileAddr),y
+                iny                 ; increase y position to next tile
+                iny
+                dec ScorePtr        ; decrease ScorePtr to point to the next lower digits of score
+                dex                 ; decrease loop counter
+                bne loop
+                #system.resetMMU 1
+        rts
+.endproc
 
 .endsection 	; yam3g
 .endnamespace 	; playfield

@@ -15,12 +15,10 @@ SRC = 	src/main.asm \
 		src/yam3g.asm \
 		src/playfield.asm \
 		src/rnd.asm \
-		src/display.asm \
 		src/audio.asm \
 		src/defs/interrupt.asm \
 		src/defs/tinyvicky.asm \
-		src/defs/io.asm \
-		src/textencoding.asm
+		src/defs/io.asm 
 
 BINS =  tile_data/tileset.bin \
   	    tile_data/tileset.pal.bin		

@@ -19,7 +19,6 @@ Music	.dsection music
 Boot 	.dsection boot
 		.dsection init
 		.dsection system
-		.dsection display
 		.dsection audio
 
 * = $E800
