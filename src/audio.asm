@@ -12,7 +12,7 @@ CODEC_CTRL       = $D622
 ;/////////////////////////
 ;// CODEC
 ;/////////////////////////
-initCodec
+initCodec .proc
             ;                LDA #%00011010_00000000     ;R13 - Turn On Headphones
             lda #%00000000
             sta CODEC_LOW
@@ -70,18 +70,21 @@ initCodec
             sta CODEC_CTRL ; 
             jsr CODEC_WAIT_FINISH
             rts
+.endproc
 
 CODEC_WAIT_FINISH
-CODEC_Not_Finished:
+CODEC_Not_Finished .proc
             lda CODEC_CTRL
             and #$01
             cmp #$01 
             beq CODEC_Not_Finished
-            rts 
+            rts
+.endproc
 ;
 ; Turn off both PSG "chips"
 ;
-mutePSG     	jsr system.setIOPage0
+mutePSG .proc
+            	jsr system.setIOPage0
             	lda #$9f            ; Mute channel #0 (1001111)
             	sta PSG_INT_L_PORT
             	sta PSG_INT_R_PORT
@@ -98,5 +101,6 @@ mutePSG     	jsr system.setIOPage0
             	sta PSG_INT_L_PORT
             	sta PSG_INT_R_PORT
             	rts
+.endproc
 .send ; end section audio
 .endn ; end namespace audio

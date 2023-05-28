@@ -1,3 +1,4 @@
+.cpu "w65c02"
 ;********************************************************************************
 ; playfield.asm
 ;
@@ -15,6 +16,8 @@ PlayFieldYSize = 8
 
 HORIZONTAL_MATCH = %01000000
 VERTICAL_MATCH   = %10000000
+HORIZONTAL_MATCH_B = 6
+VERTICAL_MATCH_B   = 7
 CHECK_LEFT       = %00000001
 CHECK_RIGHT      = %00000010
 CHECK_UP         = %00000100
@@ -545,9 +548,7 @@ generateNew .proc
                 ; we have a matching gem pair below or to the right so we increase the current gem number
                 jsr increaseGemNumber
                 ; check if the unmatch was triggered by a horizontal match, if so check if we created a new vertical match and fix if needed
-                lda Temp
-                bit #HORIZONTAL_MATCH
-                beq recheckVertical               ; we didn't have a horizontal match, but may have had a vertical match so recheck on that
+                bbr HORIZONTAL_MATCH_B, Temp, recheckVertical 
                 jsr checkVerticalMatch            ; we did unmatch a horizontal match, so check if we created a new vertical match
                 bcs recheckVertical               ; we didn't introduce a new vertical match, so go recheck potential vertical match
                 bne +
@@ -556,9 +557,7 @@ generateNew .proc
         +
                 jsr increaseGemNumber             ; we have a match and it's the third vertical so increase gem number one more
         recheckVertical
-                lda Temp
-                bit #VERTICAL_MATCH
-                beq endMatching                   ; we didn't have a horizontal match, so we're really done here
+                bbr VERTICAL_MATCH_B, Temp, endMatching
                 jsr checkHorizontalMatch
                 bcs endMatching                   ; we didn't introduce a new horizontal match so we're done
                 bne +

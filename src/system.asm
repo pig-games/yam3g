@@ -143,33 +143,36 @@ resetMMU .macro slot
 		#system.releaseMMU
 	.endmacro
 
-setIOPage0		
-		
+setIOPage0 .proc		
 		lda $01		; Load Page Control Register
 		and #$FC    ; isolate 2 first bit 
 		sta $01     ; Write back to make sure we are on page 0
 		rts 
+.endproc
 
-setIOPage1		
+setIOPage1 .proc		
 		lda #$01		; Load Page Control Register
 		;and #$FC    ; isolate 2 first bit 
 		;ora #$01
 		sta $01     ; Write back to make sure we are on page 0
 		rts 
+.endproc
 
-setIOPage2		
+setIOPage2 .proc	
 		lda $01		; Load Page Control Register
 		and #$FC    ; isolate 2 first bit 
 		ora #$02
 		sta $01     ; Write back to make sure we are on page 0
 		rts 
+.endproc
 
-setIOPage3		
+setIOPage3 .proc	
 		lda $01		; Load Page Control Register
 		and #$FC    ; isolate 2 first bit 
 		ora #$03
 		sta $01     ; Write back to make sure we are on page 0
 		rts 
+.endproc
 
 .send ; end section system
 .endn ; end namespace system
