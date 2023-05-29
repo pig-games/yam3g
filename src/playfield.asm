@@ -1,4 +1,3 @@
-.cpu cpu_type
 ;********************************************************************************
 ; playfield.asm
 ;
@@ -8,16 +7,19 @@
 ; created by:  PIG Games (Erik van der Tier)
 ; license:     MIT
 ;********************************************************************************
+
+.cpu cpu_type
+
 .namespace	yam3g
 playfield	.namespace
 
-PlayFieldXSize = 8
-PlayFieldYSize = 8
+PlayFieldXSize     = 8
+PlayFieldYSize     = 8
 
-HORIZONTAL_MATCH = %01000000
-VERTICAL_MATCH   = %10000000
 HORIZONTAL_MATCH_B = 6
 VERTICAL_MATCH_B   = 7
+HORIZONTAL_MATCH   = 1 << HORIZONTAL_MATCH_B ;%01000000
+VERTICAL_MATCH     = 1 << VERTICAL_MATCH_B   ;%10000000
 CHECK_LEFT       = %00000001
 CHECK_RIGHT      = %00000010
 CHECK_UP         = %00000100
@@ -26,19 +28,16 @@ OFF_GEM_MN       = 0
 OFF_GEM_RIGHT    = 1
 OFF_GEM_BELOW    = 8
 Temp             = Temp0
-CurrentGem       = Temp3
 
 .section data
         .align $100
-	PlayField       .fill 64,0
-	PlayFieldEnd    .addr ?
+	PlayField               .fill 64,0
+	PlayFieldEnd            .addr ?
 .endsection
 
 .section dp
-	TileAddr        .addr ?
-	PlayFieldAddr   .addr ?
-        HorizontalMatchTotal .byte 1
-        VerticalMatchTotal  .byte 1
+	TileAddr                .addr ?
+	PlayFieldAddr           .addr ?
 .endsection
 
 .section yam3g
@@ -100,163 +99,6 @@ updateScore .proc
 .endproc
 
 ;********************************************************************************
-; swapLeft
-;
-; Attempt swap with gem to the left of the cursor.
-;
-; input:
-; * CurPosX
-; * CurPosY
-; output:
-; * C: set if successful swap
-;********************************************************************************
-swapLeft .proc
-                stz Temp3
-                stz HorizontalMatchTotal
-                stz VerticalMatchTotal
-                #loadXY CurPosX, CurPosY
-                jsr setPlayFieldAddr
-                lda PlayFieldAddr
-                pha
-                lda (PlayFieldAddr)
-                sta CurrentGem
-                dec PlayFieldAddr    ; move PlayFieldAddr to the gem to the left
-                
-                lda #~CHECK_RIGHT    ; check all directions except where we came from
-                tax
-                jsr checkMatches
-                bcc +
-                inc Temp3
-                txa
-                sta HorizontalMatchTotal
-                tya
-                sta VerticalMatchTotal
-        +
-                pla
-                dec a
-                lda (PlayFieldAddr)
-                sta CurrentGem
-                inc PlayFieldAddr
-                lda #~CHECK_LEFT
-                tax
-                jsr checkMatches
-                bcs +
-                lda Temp3
-                beq notFound
-        +
-                clc
-                txa
-                adc HorizontalMatchTotal
-                clc
-                tya
-                adc VerticalMatchTotal
-                sec
-                rts
-        notFound
-                stz HorizontalMatchTotal
-                stz VerticalMatchTotal
-                clc
-        rts
-.endproc
-
-;********************************************************************************
-; swapRight
-;
-; Attempt swap with gem to the right of the cursor.
-;
-; input:
-; * CurPosX
-; * CurPosY
-; output:
-; * C: set if successful swap
-;********************************************************************************
-swapRight .proc
-                #loadXY CurPosX, CurPosY
-                jsr setPlayFieldAddr
-                lda (PlayFieldAddr)
-                sta CurrentGem
-                inc PlayFieldAddr   ; move PlayFieldAddr to the gem to the right
-                
-                lda #~CHECK_LEFT    ; check all directions except where we came from
-                tax
-                jsr checkMatches
-        rts
-.endproc
-
-;********************************************************************************
-; swapUp
-;
-; Attempt swap with gem above the cursor.
-;
-; input:
-; * CurPosX
-; * CurPosY
-; output:
-; * C: set if successful swap
-;********************************************************************************
-swapUp .proc
-                #loadXY CurPosX, CurPosY
-                jsr setPlayFieldAddr
-                lda (PlayFieldAddr)
-                sta CurrentGem
-                lda PlayFieldAddr
-                sec
-                sbc #8
-                sta PlayFieldAddr   ; move PlayFieldAddr to the gem above
-                
-                lda #~CHECK_DOWN    ; check all directions except where we came from
-                tax
-                jsr checkMatches
-        rts
-.endproc
-
-;********************************************************************************
-; swapDown
-;
-; Attempt swap with gem below the cursor.
-;
-; input:
-; * CurPosX
-; * CurPosY
-; output:
-; * C: set if successful swap
-;********************************************************************************
-swapDown .proc
-                #loadXY CurPosX, CurPosY
-                jsr setPlayFieldAddr
-                lda (PlayFieldAddr)
-                sta CurrentGem
-                lda PlayFieldAddr
-                clc
-                adc #8
-                sta PlayFieldAddr ; move PlayFieldAddr to the gem below
-                
-                lda #~CHECK_UP    ; check all directions except where we came from
-                tax
-                jsr checkMatches
-        rts
-.endproc
-
-;********************************************************************************
-; #loadXY x, y (Macro)
-;
-; Load x, y values into the X and Y registers.
-;
-; input:
-; * x: x-value using any addressing mode available to 'lda'
-; * y: y-value using any addressing mode available to 'lda'
-; output:
-; * X
-; * Y
-;********************************************************************************
-loadXY .macro x, y
-                lda \x
-                tax
-                lda \y
-                tay
-.endmacro
-
-;********************************************************************************
 ; setPlayFieldAddr
 ;
 ; Sets the PlayFieldAddr ptr for the given X, Y coordinates.
@@ -291,6 +133,7 @@ setPlayFieldAddr .proc
 ;
 ; input:
 ; * CurrentGem: current gem number
+; * A: current gem number
 ; * X: directions to check (bit 0-3 represent: Left, Right, Up, Down. If set this direction is checked)
 ; output:
 ; * X: number of horizontal matches
@@ -301,9 +144,10 @@ checkMatches .proc
         BackupPFA        = Temp0
         HorMatchAmount   = Temp1
         VerMatchAmount   = Temp2
+        CurrentGem       = Temp3
                 stz HorMatchAmount
                 stz VerMatchAmount
-
+                sta CurrentGem
                 lda PlayFieldAddr
                 sta BackupPFA
 

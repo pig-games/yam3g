@@ -1,3 +1,13 @@
+;********************************************************************************
+; yam3g.asm
+;
+; The 'root' file for the yam3g game logic.
+;
+; date:        2023-05-25
+; created by:  PIG Games (Erik van der Tier)
+; license:     MIT
+;********************************************************************************
+
 .cpu cpu_type
 
 yam3g       .namespace
@@ -40,6 +50,8 @@ musicPlay = Music + 3
         CurPosX         .byte 0
         CurPosY         .byte 0
         ButtonStatus    .byte 0
+        HorizontalMatchTotal    .byte 1
+        VerticalMatchTotal      .byte 1
         Score0          .byte 0
         Score1          .byte 0
         Score2          .byte 0
@@ -203,7 +215,7 @@ joyRight
                 lda io.joy.VAL                 ; restore joy value for button checks
                 and io.joy.BUTTON_0_MASK
                 beq +
-                jsr playfield.swapRight        ; if button 0 is pressed attempt a swap
+                jsr cursor.swapRight        ; if button 0 is pressed attempt a swap
                 bcc end
                 jsr playfield.updateScore
         +
@@ -213,7 +225,7 @@ joyLeft
                 lda io.joy.VAL
                 and io.joy.BUTTON_0_MASK
                 beq +
-                jsr playfield.swapLeft
+                jsr cursor.swapLeft
                 bcc end
                 jsr playfield.updateScore
         +
@@ -223,7 +235,7 @@ joyDown
                 lda io.joy.VAL
                 and io.joy.BUTTON_0_MASK
                 beq +
-                jsr playfield.swapDown
+                jsr cursor.swapDown
                 bcc end
                 jsr playfield.updateScore
         +
@@ -233,7 +245,7 @@ joyUp
                 lda io.joy.VAL
                 and io.joy.BUTTON_0_MASK
                 beq +
-                jsr playfield.swapUp
+                jsr cursor.swapUp
                 bcc end                        ; swap failed we're done
                 jsr playfield.updateScore
         +

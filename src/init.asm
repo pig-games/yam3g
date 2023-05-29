@@ -1,3 +1,13 @@
+;********************************************************************************
+; init.asm
+;
+; Routines for the initialisation of the system.
+;
+; date:        2023-05-29
+; created by:  PIG Games (Erik van der Tier)
+; license:     MIT
+;********************************************************************************
+
 .cpu cpu_type
 
 init		.namespace
