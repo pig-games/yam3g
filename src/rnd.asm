@@ -1,8 +1,8 @@
 .cpu cpu_type
 rnd	.namespace
 
-.section DP
-seed	.fill 4
+.section dp
+seed	.byte 4
 .send
 
 .section yam3g

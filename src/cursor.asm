@@ -160,47 +160,42 @@ moveUp .proc
 ; * C: set if successful swap
 ;********************************************************************************
 swapLeft .proc
-                stz Temp3
+                stz Temp4
                 stz HorizontalMatchTotal
                 stz VerticalMatchTotal
                 #loadXY CurPosX, CurPosY
                 jsr playfield.setPlayFieldAddr
-                lda playfield.PlayFieldAddr
-                pha
+		pha			       ; backup low byte of address
                 lda (playfield.PlayFieldAddr)
-                pha
                 dec playfield.PlayFieldAddr    ; move PlayFieldAddr to the gem to the left
-                
-                lda #~playfield.CHECK_RIGHT    ; check all directions except where we came from
-                tax
-		pla
+                ldx #~playfield.CHECK_RIGHT    ; check all directions except where we came from
                 jsr playfield.checkMatches
                 bcc +
-                inc Temp3
+                inc Temp4
                 txa
                 sta HorizontalMatchTotal
                 tya
                 sta VerticalMatchTotal
         +
-                pla
-                dec a
-                lda (playfield.PlayFieldAddr)
-                pha
-                inc playfield.PlayFieldAddr
-                lda #~playfield.CHECK_LEFT
-                tax
-		pla
+		pla			  	; restore low byte of playfield address
+		sta playfield.PlayFieldAddr
+		dec playfield.PlayFieldAddr
+                lda (playfield.PlayFieldAddr)	; get gem number
+		inc playfield.PlayFieldAddr
+                ldx #~playfield.CHECK_LEFT
                 jsr playfield.checkMatches
                 bcs +
-                lda Temp3
+                lda Temp4
                 beq notFound
         +
                 clc
                 txa
                 adc HorizontalMatchTotal
+                sta HorizontalMatchTotal
                 clc
                 tya
                 adc VerticalMatchTotal
+                sta VerticalMatchTotal
                 sec
                 rts
         notFound
@@ -225,12 +220,8 @@ swapRight .proc
                 #loadXY CurPosX, CurPosY
                 jsr playfield.setPlayFieldAddr
                 lda (playfield.PlayFieldAddr)
-                pha
                 inc playfield.PlayFieldAddr   ; move PlayFieldAddr to the gem to the right
-                
-                lda #~playfield.CHECK_LEFT    ; check all directions except where we came from
-                tax
-		pla
+                ldx #~playfield.CHECK_LEFT    ; check all directions except where we came from
                 jsr playfield.checkMatches
         rts
 .endproc
@@ -255,9 +246,7 @@ swapUp .proc
                 sec
                 sbc #8
                 sta playfield.PlayFieldAddr   ; move PlayFieldAddr to the gem above
-                
-                lda #~playfield.CHECK_DOWN    ; check all directions except where we came from
-                tax
+                ldx #~playfield.CHECK_DOWN    ; check all directions except where we came from
 		pla
                 jsr playfield.checkMatches
         rts
@@ -284,8 +273,7 @@ swapDown .proc
                 adc #8
                 sta playfield.PlayFieldAddr ; move PlayFieldAddr to the gem below
                 
-                lda #~playfield.CHECK_UP    ; check all directions except where we came from
-                tax
+                ldx #~playfield.CHECK_UP    ; check all directions except where we came from
 		pla
                 jsr playfield.checkMatches
         rts

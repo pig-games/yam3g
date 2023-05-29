@@ -36,8 +36,8 @@ Temp             = Temp0
 .endsection
 
 .section dp
-	TileAddr                .addr ?
-	PlayFieldAddr           .addr ?
+	TileAddr                .word 1
+	PlayFieldAddr           .word 1
 .endsection
 
 .section yam3g
@@ -107,10 +107,13 @@ updateScore .proc
 ; * X: x-coordinate
 ; * Y: y-coordinate
 ; output:
+; * A: low byte of PlayFieldAddr (useful for backing it up)
 ; * PlayFieldAddr(+1) contains the address for the gem at X, Y.
 ;********************************************************************************
 setPlayFieldAddr .proc
         Temp = Temp0
+                lda #>PlayField
+                sta PlayFieldAddr+1
                 tya
                 asl a                 ; multiply y-pos by 8
                 asl a
@@ -120,9 +123,7 @@ setPlayFieldAddr .proc
                 txa
                 adc Temp              ; add x-pos to calculate offset
                 adc #<PlayField       ; add offset to start of playfield
-                sta PlayFieldAddr
-                lda #>PlayField
-                sta PlayFieldAddr+1
+                sta PlayFieldAddr     ; we now have low byte in a
         rts
 .endproc
 
@@ -145,9 +146,9 @@ checkMatches .proc
         HorMatchAmount   = Temp1
         VerMatchAmount   = Temp2
         CurrentGem       = Temp3
+                sta CurrentGem
                 stz HorMatchAmount
                 stz VerMatchAmount
-                sta CurrentGem
                 lda PlayFieldAddr
                 sta BackupPFA
 
@@ -157,6 +158,8 @@ checkMatches .proc
                 eor (PlayFieldAddr)
                 and #7
                 bne checkLeft
+                ldx #0
+                ldy #0
                 clc
                 rts
         checkLeft
@@ -252,9 +255,13 @@ checkMatches .proc
                 cpy #2
                 blt notFound
         found
+                lda BackupPFA
+                sta PlayFieldAddr
                 sec
                 rts
         notFound
+                lda BackupPFA
+                sta PlayFieldAddr
                 clc
                 rts
 .endproc

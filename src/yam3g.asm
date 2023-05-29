@@ -50,8 +50,8 @@ musicPlay = Music + 3
         CurPosX         .byte 0
         CurPosY         .byte 0
         ButtonStatus    .byte 0
-        HorizontalMatchTotal    .byte 1
-        VerticalMatchTotal      .byte 1
+        HorizontalMatchTotal    .byte 0
+        VerticalMatchTotal      .byte 0
         Score0          .byte 0
         Score1          .byte 0
         Score2          .byte 0
@@ -60,6 +60,7 @@ musicPlay = Music + 3
         Temp1           .byte 0
         Temp2           .byte 0
         Temp3           .byte 0
+        Temp4           .byte 0
 .send
 
 .section        yam3g
