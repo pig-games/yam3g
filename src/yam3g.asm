@@ -156,7 +156,7 @@ setLUT0_4_Tiles2
                 sta vky.tile.T0_CONTROL_REG  ; Enable Layer0
                 sta vky.tile.T1_CONTROL_REG  ; Enable Layer1
                 sta vky.tile.T2_CONTROL_REG  ; Enable Layer2
-                jsr playfield.initCursor
+                jsr cursor.init
                 jsr playfield.resetScore
                 ; generate random tiles for map 1
                 jsr playfield.generateNew
@@ -207,7 +207,7 @@ joyRight
                 bcc end
                 jsr playfield.updateScore
         +
-                jsr playfield.cursorRight
+                jsr cursor.moveRight
                 bra end
 joyLeft
                 lda io.joy.VAL
@@ -217,7 +217,7 @@ joyLeft
                 bcc end
                 jsr playfield.updateScore
         +
-                jsr playfield.cursorLeft
+                jsr cursor.moveLeft
                 bra end
 joyDown
                 lda io.joy.VAL
@@ -227,7 +227,7 @@ joyDown
                 bcc end
                 jsr playfield.updateScore
         +
-                jsr playfield.cursorDown
+                jsr cursor.moveDown
                 bra end
 joyUp
                 lda io.joy.VAL
@@ -237,7 +237,7 @@ joyUp
                 bcc end                        ; swap failed we're done
                 jsr playfield.updateScore
         +
-                jsr playfield.cursorUp
+                jsr cursor.moveUp
                 bra end
 
 .bend        ; end block 

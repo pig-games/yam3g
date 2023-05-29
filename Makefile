@@ -14,6 +14,7 @@ SRC = 	src/main.asm \
 		src/system.asm \
 		src/yam3g.asm \
 		src/playfield.asm \
+		src/cursor.asm \
 		src/rnd.asm \
 		src/audio.asm \
 		src/defs/interrupt.asm \
