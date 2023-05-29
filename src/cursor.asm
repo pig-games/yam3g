@@ -149,6 +149,30 @@ moveUp .proc
 .endproc
 
 ;********************************************************************************
+; updateTotalMatches
+;
+; Updates the total horizontal and vertical matches.
+;
+; input:
+; * X: horizontal number of matches
+; * Y: vertical number of matches
+; output:
+; * HorizontalMatchTotal
+; * VerticalMatchTotal
+;****************************************************h****************************
+updateTotalMatches .proc
+                clc
+                txa
+                adc HorizontalMatchTotal
+                sta HorizontalMatchTotal
+                clc
+                tya
+                adc VerticalMatchTotal
+                sta VerticalMatchTotal
+        rts
+.endproc
+
+;********************************************************************************
 ; swapLeft
 ;
 ; Attempt swap with gem to the left of the cursor.
@@ -164,38 +188,32 @@ swapLeft .proc
                 stz HorizontalMatchTotal
                 stz VerticalMatchTotal
                 #loadXY CurPosX, CurPosY
-                jsr playfield.setPlayFieldAddr
-		pha			       ; backup low byte of address
-                lda (playfield.PlayFieldAddr)
-                dec playfield.PlayFieldAddr    ; move PlayFieldAddr to the gem to the left
-                ldx #~playfield.CHECK_RIGHT    ; check all directions except where we came from
+                jsr playfield.setAddr
+		pha			    ; backup low byte of source address
+                lda (playfield.Addr)
+                tay
+                ldx #~playfield.CHECK_RIGHT ; check all directions except where we came from
+                dec playfield.Addr          ; move Addr to the gem to the left
+                lda playfield.Addr
+                pha                         ; back up low byte of target address
                 jsr playfield.checkMatches
                 bcc +
                 inc Temp4
-                txa
-                sta HorizontalMatchTotal
-                tya
-                sta VerticalMatchTotal
+                jsr updateTotalMatches
         +
-		pla			  	; restore low byte of playfield address
-		sta playfield.PlayFieldAddr
-		dec playfield.PlayFieldAddr
-                lda (playfield.PlayFieldAddr)	; get gem number
-		inc playfield.PlayFieldAddr
+		pla			    ; restore low byte of target address
+		sta playfield.Addr
+                lda (playfield.Addr)	    ; get gem number
+                tay
+                pla                         ; restore low byte of source address
+                sta playfield.Addr
                 ldx #~playfield.CHECK_LEFT
                 jsr playfield.checkMatches
                 bcs +
                 lda Temp4
                 beq notFound
         +
-                clc
-                txa
-                adc HorizontalMatchTotal
-                sta HorizontalMatchTotal
-                clc
-                tya
-                adc VerticalMatchTotal
-                sta VerticalMatchTotal
+                jsr updateTotalMatches
                 sec
                 rts
         notFound
@@ -217,12 +235,42 @@ swapLeft .proc
 ; * C: set if successful swap
 ;********************************************************************************
 swapRight .proc
+                stz Temp4
+                stz HorizontalMatchTotal
+                stz VerticalMatchTotal
                 #loadXY CurPosX, CurPosY
-                jsr playfield.setPlayFieldAddr
-                lda (playfield.PlayFieldAddr)
-                inc playfield.PlayFieldAddr   ; move PlayFieldAddr to the gem to the right
-                ldx #~playfield.CHECK_LEFT    ; check all directions except where we came from
+                jsr playfield.setAddr
+                pha                         ; backup low byte of source address
+                lda (playfield.Addr)
+                tay
+                ldx #~playfield.CHECK_LEFT  ; check all directions except where we came from
+                inc playfield.Addr          ; move Addr to the gem to the right
+                lda playfield.Addr
+                pha                         ; backup low byte of target address
                 jsr playfield.checkMatches
+                bcc +
+                inc Temp4
+                jsr updateTotalMatches
+        +
+                pla                        ; restore low byte of target address
+                sta playfield.Addr
+                lda (playfield.Addr)
+                tay
+                pla                        ; restore low byte of source address
+                sta playfield.Addr
+                ldx #~playfield.CHECK_RIGHT
+                jsr playfield.checkMatches
+                bcs +
+                lda Temp4
+                beq notFound
+        +
+                jsr updateTotalMatches
+                sec
+                rts
+        notFound
+                stz HorizontalMatchTotal
+                stz VerticalMatchTotal
+                clc
         rts
 .endproc
 
@@ -238,17 +286,44 @@ swapRight .proc
 ; * C: set if successful swap
 ;********************************************************************************
 swapUp .proc
+                stz Temp4
+                stz HorizontalMatchTotal
+                stz VerticalMatchTotal
                 #loadXY CurPosX, CurPosY
-                jsr playfield.setPlayFieldAddr
-                lda (playfield.PlayFieldAddr)
-                pha
-                lda playfield.PlayFieldAddr
+                jsr playfield.setAddr
+                pha                        ; backup low byte of source address
+                lda (playfield.Addr)       ; get source gem number
+                tay
+                ldx #~playfield.CHECK_DOWN ; check all directions except where we came from
+                lda playfield.Addr
                 sec
-                sbc #8
-                sta playfield.PlayFieldAddr   ; move PlayFieldAddr to the gem above
-                ldx #~playfield.CHECK_DOWN    ; check all directions except where we came from
-		pla
+                sbc #8                     ; point playfield addr to gem above
+                pha                        ; backup low byte of target addr
+                sta playfield.Addr         ; store target addr
                 jsr playfield.checkMatches
+                bcc +
+                inc Temp4
+                jsr updateTotalMatches
+        +
+                pla                         ; restore low byte of target addr
+                sta playfield.Addr
+                lda (playfield.Addr)
+                tay
+                pla                         ; restore low byte of source addr
+                sta playfield.Addr
+                ldx #~playfield.CHECK_UP
+                jsr playfield.checkMatches
+                bcs +
+                lda Temp4
+                beq notFound
+        +
+                jsr updateTotalMatches
+                sec
+                rts
+        notFound
+                stz HorizontalMatchTotal
+                stz VerticalMatchTotal
+                clc
         rts
 .endproc
 
@@ -264,18 +339,44 @@ swapUp .proc
 ; * C: set if successful swap
 ;********************************************************************************
 swapDown .proc
+                stz Temp4
+                stz HorizontalMatchTotal
+                stz VerticalMatchTotal
                 #loadXY CurPosX, CurPosY
-                jsr playfield.setPlayFieldAddr
-                lda (playfield.PlayFieldAddr)
-                pha
-                lda playfield.PlayFieldAddr
+                jsr playfield.setAddr
+                pha                        ; backup low byte of source address
+                lda (playfield.Addr)       ; get source gem number
+                tay
+                ldx #~playfield.CHECK_UP ; check all directions except where we came from
+                lda playfield.Addr
                 clc
-                adc #8
-                sta playfield.PlayFieldAddr ; move PlayFieldAddr to the gem below
-                
-                ldx #~playfield.CHECK_UP    ; check all directions except where we came from
-		pla
+                adc #8                     ; point playfield addr to gem below
+                pha                        ; backup low byte of target addr
+                sta playfield.Addr         ; store target addr
                 jsr playfield.checkMatches
+                bcc +
+                inc Temp4
+                jsr updateTotalMatches
+        +
+                pla                         ; restore low byte of target addr
+                sta playfield.Addr
+                lda (playfield.Addr)
+                tay
+                pla                         ; restore low byte of source addr
+                sta playfield.Addr
+                ldx #~playfield.CHECK_DOWN
+                jsr playfield.checkMatches
+                bcs +
+                lda Temp4
+                beq notFound
+        +
+                jsr updateTotalMatches
+                sec
+                rts
+        notFound
+                stz HorizontalMatchTotal
+                stz VerticalMatchTotal
+                clc
         rts
 .endproc
 

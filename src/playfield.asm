@@ -37,7 +37,7 @@ Temp             = Temp0
 
 .section dp
 	TileAddr                .word 1
-	PlayFieldAddr           .word 1
+	Addr           .word 1
 .endsection
 
 .section yam3g
@@ -99,31 +99,31 @@ updateScore .proc
 .endproc
 
 ;********************************************************************************
-; setPlayFieldAddr
+; setAddr
 ;
-; Sets the PlayFieldAddr ptr for the given X, Y coordinates.
+; Sets the Addr ptr for the given X, Y coordinates.
 ;
 ; input:
 ; * X: x-coordinate
 ; * Y: y-coordinate
 ; output:
-; * A: low byte of PlayFieldAddr (useful for backing it up)
-; * PlayFieldAddr(+1) contains the address for the gem at X, Y.
+; * A: low byte of Addr (useful for backing it up)
+; * Addr(+1) contains the address for the gem at X, Y.
 ;********************************************************************************
-setPlayFieldAddr .proc
+setAddr .proc
         Temp = Temp0
                 lda #>PlayField
-                sta PlayFieldAddr+1
-                tya
+                sta Addr+1
+                tya                   ; get y-pos into a
                 asl a                 ; multiply y-pos by 8
                 asl a
                 asl a
                 clc
                 sta Temp
-                txa
+                txa                   ; get x-pos into a
                 adc Temp              ; add x-pos to calculate offset
                 adc #<PlayField       ; add offset to start of playfield
-                sta PlayFieldAddr     ; we now have low byte in a
+                sta Addr     ; we now have low byte in a
         rts
 .endproc
 
@@ -132,9 +132,11 @@ setPlayFieldAddr .proc
 ;
 ; check for matches around a target gem.
 ;
+; clobbers:
+; * Addr
 ; input:
-; * CurrentGem: current gem number
-; * A: current gem number
+; * Addr: low byte of target address
+; * Y: current gem number
 ; * X: directions to check (bit 0-3 represent: Left, Right, Up, Down. If set this direction is checked)
 ; output:
 ; * X: number of horizontal matches
@@ -146,16 +148,16 @@ checkMatches .proc
         HorMatchAmount   = Temp1
         VerMatchAmount   = Temp2
         CurrentGem       = Temp3
-                sta CurrentGem
+                sty CurrentGem
                 stz HorMatchAmount
                 stz VerMatchAmount
-                lda PlayFieldAddr
+                lda Addr
                 sta BackupPFA
 
         ; check if target gem is the same as the current, if so we're done
                 lda CurrentGem
                 and #7
-                eor (PlayFieldAddr)
+                eor (Addr)
                 and #7
                 bne checkLeft
                 ldx #0
@@ -169,21 +171,21 @@ checkMatches .proc
                 
                 lda CurPosX
                 beq checkRight
-                dec PlayFieldAddr        ; move playfield addr to the left
+                dec Addr        ; move playfield addr to the left
 
                 lda CurrentGem
                 and #7
-                eor (PlayFieldAddr)
+                eor (Addr)
                 and #7
                 bne checkRight
                 inc HorMatchAmount
-                lda (PlayFieldAddr)
+                lda (Addr)
                 and #HORIZONTAL_MATCH
                 beq checkRight
                 inc HorMatchAmount
         checkRight
                 lda BackupPFA                ; restore original playfield address
-                sta PlayFieldAddr
+                sta Addr
 
                 txa
                 and #CHECK_RIGHT
@@ -195,17 +197,17 @@ checkMatches .proc
                 lda CurrentGem
                 and #7
                 ldy #1
-                eor (PlayFieldAddr),y
+                eor (Addr),y
                 and #7
                 bne checkAbove        ; we didn't find a horizontal match try vertical
                 inc HorMatchAmount
-                lda (PlayFieldAddr),y
+                lda (Addr),y
                 and #HORIZONTAL_MATCH
                 beq checkAbove
                 inc HorMatchAmount
         checkAbove
                 lda BackupPFA                ; restore original playfield address
-                sta PlayFieldAddr
+                sta Addr
 
                 txa
                 and #CHECK_UP
@@ -213,16 +215,16 @@ checkMatches .proc
                 lda CurPosY
                 beq checkBelow
                 sec
-                lda PlayFieldAddr
+                lda Addr
                 sbc #8
-                sta PlayFieldAddr
-                lda (PlayFieldAddr)
+                sta Addr
+                lda (Addr)
                 and #7
                 eor CurrentGem
                 and #7
                 bne checkBelow
                 inc VerMatchAmount
-                lda (PlayFieldAddr)
+                lda (Addr)
                 and #VERTICAL_MATCH
                 beq checkBelow
                 inc VerMatchAmount
@@ -232,18 +234,18 @@ checkMatches .proc
                 beq checkMatch
                 
                 lda BackupPFA                ; restore original playfield address
-                sta PlayFieldAddr
+                sta Addr
                 lda CurPosY
                 cmp #7
                 beq checkMatch
                 ldy #8
                 lda CurrentGem
                 and #7
-                eor (PlayFieldAddr),y
+                eor (Addr),y
                 and #7
                 bne checkMatch
                 inc VerMatchAmount
-                lda (PlayFieldAddr),y
+                lda (Addr),y
                 and #VERTICAL_MATCH
                 beq checkMatch
                 inc VerMatchAmount
@@ -255,13 +257,9 @@ checkMatches .proc
                 cpy #2
                 blt notFound
         found
-                lda BackupPFA
-                sta PlayFieldAddr
                 sec
                 rts
         notFound
-                lda BackupPFA
-                sta PlayFieldAddr
                 clc
                 rts
 .endproc
@@ -279,15 +277,15 @@ generateNew .proc
                 jsr rnd.init                        ;Galois24o
 
                 lda #<PlayFieldEnd-1
-                sta PlayFieldAddr
+                sta Addr
                 lda #>PlayFieldEnd-1
-                sta PlayFieldAddr+1
+                sta Addr+1
 
                 ldx #64
         loop
                 stz Temp                          ; intialize Temp
                 jsr rnd.generate                  ; get random number
-                sta (PlayFieldAddr)               ; store gem number in current gem position
+                sta (Addr)               ; store gem number in current gem position
                 ; jmp endMatching                 ; uncomment to see playfield without unmatching
 
                 jsr checkHorizontalMatch
@@ -323,7 +321,7 @@ generateNew .proc
                 jsr increaseGemNumber             ; we have a match and it's the third horizontal so increase gem number one more
         endMatching
                 ; we're done matching let's do next gem
-                dec PlayFieldAddr
+                dec Addr
                 dex
                 bne loop
 	rts
@@ -341,12 +339,12 @@ generateNew .proc
 setHorizontalMatchBits .proc
                 ; our match with the right neighbour is isolated, so we set involved match gem's bits
                 lda #HORIZONTAL_MATCH
-                ora (PlayFieldAddr)
-                sta (PlayFieldAddr)
+                ora (Addr)
+                sta (Addr)
                 lda #HORIZONTAL_MATCH
                 ldy #OFF_GEM_RIGHT
-                ora (PlayFieldAddr),y
-                sta (PlayFieldAddr),y
+                ora (Addr),y
+                sta (Addr),y
         rts
 .endproc
 
@@ -362,12 +360,12 @@ setHorizontalMatchBits .proc
 setVerticalMatchBits .proc
                 ; our match with the below neighbour is isolated, so we set involved match gem's bits
                 lda #VERTICAL_MATCH
-                ora (PlayFieldAddr)
-                sta (PlayFieldAddr)
+                ora (Addr)
+                sta (Addr)
                 ldy #OFF_GEM_BELOW
                 lda #VERTICAL_MATCH
-                ora (PlayFieldAddr),y
-                sta (PlayFieldAddr),y
+                ora (Addr),y
+                sta (Addr),y
         rts
 .endproc
 
@@ -378,10 +376,10 @@ setVerticalMatchBits .proc
 ; output:
 ;********************************************************************************
 increaseGemNumber .proc
-                lda (PlayFieldAddr)
+                lda (Addr)
                 inc a                         ; increase gem number to no long match
                 and #7                        ; roll-over if needed
-                sta (PlayFieldAddr)
+                sta (Addr)
         rts
 .endproc
 
@@ -405,16 +403,16 @@ checkHorizontalMatch .proc
                 txa
                 and #$7                           ; check if our counter (x) is a multiple of 8 so right most
                 beq noMatch                       ; we still want to check for a vertical match below
-                lda (PlayFieldAddr)               ; restore gem number and check for match with gem to the right
+                lda (Addr)               ; restore gem number and check for match with gem to the right
                 ldy #OFF_GEM_RIGHT
-                eor (PlayFieldAddr),y
+                eor (Addr),y
                 and #7
                 bne noMatch                       ; no horizontal match so we check vertical
                 ; check for match amount for gem to the right
                 lda #HORIZONTAL_MATCH             ; bit indicating horizontal match between two gems
                 ora Temp
                 sta Temp                          ; add match bit to Temp, so we can use that later to check for matches
-                and (PlayFieldAddr),y             ; set z if our neighbour already was a match, else this is the first match
+                and (Addr),y             ; set z if our neighbour already was a match, else this is the first match
                 clc                               ; clear c to indicate a match
                 rts
 noMatch
@@ -443,15 +441,15 @@ checkVerticalMatch .proc
                 bra noMatch                       ; if >= 56, we're in the bottom row so no lower matches possible, but maybe horizontal
         notBottomRow
                 ldy #OFF_GEM_BELOW
-                lda (PlayFieldAddr)
-                eor (PlayFieldAddr),y
+                lda (Addr)
+                eor (Addr),y
                 and #7
                 bne noMatch
                 lda #VERTICAL_MATCH               ; bit indicating vertical match between two gems
                 ora Temp
                 sta Temp                          ; add match bit to Temp, so we can use that later to check for matches
                 lda #VERTICAL_MATCH
-                and (PlayFieldAddr),y             ; set z if our neighbour already was a match, else this is the first match
+                and (Addr),y             ; set z if our neighbour already was a match, else this is the first match
                 clc                               ; clear c to indicate a match
                 rts
 noMatch
@@ -472,9 +470,9 @@ updateTileMap .proc
                 ; setup mmu for tile map access
                 #system.setMMU 1, 8
                 lda #<PlayField
-                sta PlayFieldAddr
+                sta Addr
                 lda #>PlayField
-                sta PlayFieldAddr+1
+                sta Addr+1
                 lda #(8*TileMapXSize)+14
                 sta TileAddr
                 lda #$25
@@ -484,7 +482,7 @@ updateTileMap .proc
         rowLoop
                 ldy #0
         colLoop
-                lda (PlayFieldAddr)
+                lda (Addr)
                 and #7
                 clc
                 adc #80
@@ -492,7 +490,7 @@ updateTileMap .proc
                 lda #0
                 iny
                 sta (TileAddr),y
-                inc PlayFieldAddr
+                inc Addr
                 iny
                 cpy #16
                 bne colLoop
