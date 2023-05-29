@@ -76,7 +76,7 @@ setLUT0_4_Tiles2
                 bne setLUT0_4_Tiles2
                 
                 ; Go in Page 0 to program the rest
-                jsr system.SetIOPage0
+                jsr system.setIOPage0
 
                 ; Set the Tile Layer Map 0 Pointer
                 lda #<TileMapLayer0

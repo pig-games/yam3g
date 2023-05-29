@@ -127,7 +127,7 @@ initCursor .proc
                 lda #32+6*16
                 sta vky.sprite.SP0_X_L
                 lda #32+4*16
-                sta vky.sprite.SP0_y_L
+                sta vky.sprite.SP0_Y_L
                 rts
 .endproc
 

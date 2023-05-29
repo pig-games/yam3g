@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.58.2974? listing file
 ; 64tass --long-branch --long-address -b -fc -Wshadow -Wcase-symbol -D "cpu_type=\"w65c02\"" -o build/YAM3G.bin --list build/YAM3G.lst --labels=build/YAM3G.lbl src/main.asm src/init.asm src/system.asm src/yam3g.asm src/playfield.asm src/rnd.asm src/audio.asm src/defs/interrupt.asm src/defs/tinyvicky.asm src/defs/platform.asm src/defs/io.asm
-; Mon May 29 11:02:12 2023
+; Mon May 29 11:23:44 2023
 
 ;Offset	;PC	;Hex		;Monitor	;Source
 
@@ -4168,7 +4168,7 @@
 .f01d		e8		inx		                inx
 .f01e		e0 f0		cpx #$f0	                cpx #$F0
 .f020		d0 f5		bne $f017	                bne setLUT0_4_Tiles2
-.f022		20 99 e0	jsr $e099	                jsr system.SetIOPage0
+.f022		20 99 e0	jsr $e099	                jsr system.setIOPage0
 .f025		a9 00		lda #$00	                lda #<TileMapLayer0
 .f027		8d 01 d2	sta $d201	                sta vky.tile.T0_START_ADDY_L
 .f02a		a9 00		lda #$00	                lda #>TileMapLayer0
@@ -4387,7 +4387,7 @@
 .f1ae		a9 80		lda #$80	                lda #32+6*16
 .f1b0		8d 04 d9	sta $d904	                sta vky.sprite.SP0_X_L
 .f1b3		a9 60		lda #$60	                lda #32+4*16
-.f1b5		8d 06 d9	sta $d906	                sta vky.sprite.SP0_y_L
+.f1b5		8d 06 d9	sta $d906	                sta vky.sprite.SP0_Y_L
 .f1b8		60		rts		                rts
 .f1b9						setCursorPos
 .f1b9		a5 03		lda $03		                lda CurPosX

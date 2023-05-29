@@ -1,3 +1,4 @@
+.cpu cpu_type
 audio		.namespace
 .section	audio
 

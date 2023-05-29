@@ -1,3 +1,5 @@
+.cpu cpu_type
+
 display		.namespace		
 .section 	display
 

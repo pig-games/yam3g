@@ -1,3 +1,4 @@
+.cpu cpu_type
 rnd	.namespace
 
 .section DP

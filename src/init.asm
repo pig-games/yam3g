@@ -1,3 +1,5 @@
+.cpu cpu_type
+
 init		.namespace
 .section init
 ; --- LET'S BEGIN --- 
