@@ -1,8 +1,8 @@
-TileSet0Data	= $012500
 TileMapLayer2	= $011000
 TileMapLayer0	= $010000
 TileMapLayer1	= $010500
 RVECTOR_IRQ	= $fffe
+TileSet0Data	= $012500
 Stack		= $100
 DP		= $02
 NMI		= $ff00
@@ -12,4 +12,5 @@ IRQ		= $fe00
 Boot		= $e000
 RVECTOR_NMI	= $fffa
 Music		= $1000
+cpu_type	= "w65c02"
 SpriteData	= $011500

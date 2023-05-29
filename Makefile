@@ -18,6 +18,7 @@ SRC = 	src/main.asm \
 		src/audio.asm \
 		src/defs/interrupt.asm \
 		src/defs/tinyvicky.asm \
+		src/defs/platform.asm \
 		src/defs/io.asm 
 
 BINS =  tile_data/tileset.bin \
@@ -26,11 +27,13 @@ BINS =  tile_data/tileset.bin \
 MAPS =  tile_data/layer1.txm \
 		tile_data/layer2.txm \
 		tile_data/layer3.txm
-		
-OPTS = 	--long-address -b -fc
 
-$(BLD_NAME): $(SRC) $(BINS) $(MAPS)
-		64tass $(OPTS) $(SRC) -o $@ --list $(basename $@).lst --labels=$(basename $@).lbl
+LABELS = -D cpu_type=\"w65c02\"
+		
+OPTS = 	--long-branch --long-address -b -fc -Wshadow -Wcase-symbol
+
+$(BLD_NAME): $(SRC) $(BINS) $(MAPS) Makefile
+		64tass $(OPTS) $(LABELS) $(SRC) -o $@ --list $(basename $@).lst --labels=$(basename $@).lbl
 
 up: 	$(BLD_NAME)
 		upload $(BLD_NAME) $(ADDR)

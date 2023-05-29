@@ -36,7 +36,7 @@ init		.namespace
                 lda interrupt.MASK_REG0
                 and #~interrupt.JR0_INT00_SOF
                 sta interrupt.MASK_REG0
-DONE	        JMP DONE
+DONE	        bra DONE
 
 .send ; end section init
 .endn ; end namespace init

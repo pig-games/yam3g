@@ -1,4 +1,4 @@
-.cpu "w65c02"
+.cpu cpu_type
 ;********************************************************************************
 ; playfield.asm
 ;
@@ -31,12 +31,14 @@ CurrentGem       = Temp3
 .section data
         .align $100
 	PlayField       .fill 64,0
-	PlayFieldEnd
+	PlayFieldEnd    .addr ?
 .endsection
 
 .section dp
-	TileAddr        .fill 2
-	PlayFieldAddr   .fill 2
+	TileAddr        .addr ?
+	PlayFieldAddr   .addr ?
+        HorizontalMatchTotal .byte 1
+        VerticalMatchTotal  .byte 1
 .endsection
 
 .section yam3g
@@ -72,11 +74,11 @@ updateScore .proc
         TotalMatches = Temp0     ; used as temp storage for adding the horizontal and vertical match counts
                 stz TotalMatches
         sed
-                txa              ; get horizontal number of matches
+                lda HorizontalMatchTotal              ; get horizontal number of matches
                 clc
                 adc TotalMatches
                 sta TotalMatches
-                tya              ; get vertical number of matches
+                lda VerticalMatchTotal              ; get vertical number of matches
                 clc
                 adc TotalMatches
                 inc a            ; increase with one to count the swapped gem
@@ -242,8 +244,13 @@ cursorUp .proc
 ; * C: set if successful swap
 ;********************************************************************************
 swapLeft .proc
+                stz Temp3
+                stz HorizontalMatchTotal
+                stz VerticalMatchTotal
                 #loadXY CurPosX, CurPosY
                 jsr setPlayFieldAddr
+                lda PlayFieldAddr
+                pha
                 lda (PlayFieldAddr)
                 sta CurrentGem
                 dec PlayFieldAddr    ; move PlayFieldAddr to the gem to the left
@@ -251,6 +258,37 @@ swapLeft .proc
                 lda #~CHECK_RIGHT    ; check all directions except where we came from
                 tax
                 jsr checkMatches
+                bcc +
+                inc Temp3
+                txa
+                sta HorizontalMatchTotal
+                tya
+                sta VerticalMatchTotal
+        +
+                pla
+                dec a
+                lda (PlayFieldAddr)
+                sta CurrentGem
+                inc PlayFieldAddr
+                lda #~CHECK_LEFT
+                tax
+                jsr checkMatches
+                bcs +
+                lda Temp3
+                beq notFound
+        +
+                clc
+                txa
+                adc HorizontalMatchTotal
+                clc
+                tya
+                adc VerticalMatchTotal
+                sec
+                rts
+        notFound
+                stz HorizontalMatchTotal
+                stz VerticalMatchTotal
+                clc
         rts
 .endproc
 
@@ -548,7 +586,7 @@ generateNew .proc
                 ; we have a matching gem pair below or to the right so we increase the current gem number
                 jsr increaseGemNumber
                 ; check if the unmatch was triggered by a horizontal match, if so check if we created a new vertical match and fix if needed
-                bbr HORIZONTAL_MATCH_B, Temp, recheckVertical 
+                #bbr HORIZONTAL_MATCH_B, Temp, recheckVertical
                 jsr checkVerticalMatch            ; we did unmatch a horizontal match, so check if we created a new vertical match
                 bcs recheckVertical               ; we didn't introduce a new vertical match, so go recheck potential vertical match
                 bne +
@@ -557,7 +595,7 @@ generateNew .proc
         +
                 jsr increaseGemNumber             ; we have a match and it's the third vertical so increase gem number one more
         recheckVertical
-                bbr VERTICAL_MATCH_B, Temp, endMatching
+                #bbr VERTICAL_MATCH_B, Temp, endMatching
                 jsr checkHorizontalMatch
                 bcs endMatching                   ; we didn't introduce a new horizontal match so we're done
                 bne +

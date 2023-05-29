@@ -1,4 +1,4 @@
-.cpu "65c02"
+.cpu cpu_type
 
 yam3g       .namespace
 
