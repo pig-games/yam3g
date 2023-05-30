@@ -31,13 +31,15 @@ Boot 		.dsection boot
 		.dsection yam3g
 
 * = $FE00
-IRQ		.dsection irq
+		.dsection irq
 
 * = $FF00
-NMI		.dsection nmi
+		.dsection unusedint
 
-* = $FFFA
-		.dsection ivec
+* = $FFE4
+		.dsection ivec816
+* = $FFF4
+		.dsection ivecC02
 
 TileMapLayer0 = $010000
 * = TileMapLayer0
@@ -62,33 +64,4 @@ TileSet0Data =  $012500
 
 .section	music
 	.binary "../music/odeto64.bin"
-.send
-
-.section	irq
-                pha
-                phx
-                phy
-                php
-
-                jsr yam3g.InterruptHandlerJoystick
-
-                plp 
-                ply
-                plx
-                pla
-EXIT_IRQ_HANDLE
-		rti 
-.send
-
-.section	nmi
-rti
-.send
-
-;
-; Interrupt Vectors
-;
-.section	ivec
-RVECTOR_NMI     .addr NMI    ; FFFA
-RVECTOR_RST 	.addr Boot   ; FFFC
-RVECTOR_IRQ     .addr IRQ    ; FFFE
 .send

@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.58.2974? listing file
-; 64tass --long-branch --long-address -b -fc -Wshadow -Wcase-symbol -D "cpu_type=\"w65c02\"" -o build/YAM3G.bin --list build/YAM3G.lst --labels=build/YAM3G.lbl src/main.asm src/init.asm src/system.asm src/yam3g.asm src/playfield.asm src/cursor.asm src/rnd.asm src/audio.asm src/defs/interrupt.asm src/defs/tinyvicky.asm src/defs/platform.asm src/defs/io.asm
-; Tue May 30 08:58:47 2023
+; 64tass --long-branch --long-address -b -fc -Wshadow -Wcase-symbol -D "cpu_type=\"w65c02\"" -o build/YAM3G.bin --list build/YAM3G.lst --labels=build/YAM3G.lbl src/main.asm src/init.asm src/interrupt.asm src/system.asm src/yam3g.asm src/playfield.asm src/cursor.asm src/rnd.asm src/audio.asm src/defs/interrupt.asm src/defs/tinyvicky.asm src/defs/platform.asm src/defs/io.asm
+; Tue May 30 09:41:53 2023
 
 ;Offset	;PC	;Hex		;Monitor	;Source
 
@@ -16,8 +16,6 @@
 >0100								.fill $100
 .1000						Music
 .e000						Boot
-.fe00						IRQ
-.ff00						NMI
 =$010000					TileMapLayer0 = $010000
 =$010500					TileMapLayer1 = $010500
 =$011000					TileMapLayer2 = $011000
@@ -320,21 +318,6 @@
 >2268		60 43 b0 fb 69 fe 45 b0 fb 63 fe 60 41 b0 fb 63
 >2278		fe 8f 61 2d 29 26 ff ff 00 00 00 00 00 00 00 00
 >2288		00 00 00 00 00 00 00 00 00
-.fe00		48		pha		                pha
-.fe01		da		phx		                phx
-.fe02		5a		phy		                phy
-.fe03		08		php		                php
-.fe04		20 d8 f0	jsr $f0d8	                jsr yam3g.InterruptHandlerJoystick
-.fe07		28		plp		                plp
-.fe08		7a		ply		                ply
-.fe09		fa		plx		                plx
-.fe0a		68		pla		                pla
-.fe0b						EXIT_IRQ_HANDLE
-.fe0b		40		rti				rti
-.ff00		40		rti		rti
->fffa		00 ff				RVECTOR_NMI     .addr NMI    ; FFFA
->fffc		00 e0				RVECTOR_RST 	.addr Boot   ; FFFC
->fffe		00 fe				RVECTOR_IRQ     .addr IRQ    ; FFFE
 
 ;******  Processing input file: src/init.asm
 
@@ -366,6 +349,35 @@
 .e09f		29 fe		and #$fe	                and #~interrupt.JR0_INT00_SOF
 .e0a1		8d 6c d6	sta $d66c	                sta interrupt.MASK_REG0
 .e0a4		80 fe		bra $e0a4	DONE	        bra DONE
+
+;******  Processing input file: src/interrupt.asm
+
+.fe00						IRQ
+.fe00		48		pha		                pha
+.fe01		da		phx		                phx
+.fe02		5a		phy		                phy
+.fe03		08		php		                php
+.fe04		20 d8 f0	jsr $f0d8	                jsr yam3g.InterruptHandlerJoystick
+.fe07		28		plp		                plp
+.fe08		7a		ply		                ply
+.fe09		fa		plx		                plx
+.fe0a		68		pla		                pla
+.fe0b						EXIT_IRQ_HANDLE
+.fe0b		40		rti				rti
+.ff00						UnusedInt
+.ff00		40		rti			rti
+>ffe4		00 ff						.addr UnusedInt		; ffe4 816 native COP
+>ffe6		00 ff						.addr UnusedInt		; ffe6 816 native BRK
+>ffe8		00 ff						.addr UnusedInt		; ffe8 816 native ABORT
+>ffea		00 ff						.addr UnusedInt		; ffea 816 native NMI
+>ffec		00 ff						.addr UnusedInt		; ffec 816 native BRK
+>ffee		00 ff						.addr UnusedInt		; ffee 816 native IRQ
+>fff4		00 ff						.addr UnusedInt		; fff4  COP
+>fff6		00 00						.addr 0			; fff6  Not used on 6502
+>fff8		00 ff						.addr UnusedInt		; fff8  816 emulation ABORT
+>fffa		00 ff						.addr UnusedInt		; fffa  NMI
+>fffc		00 e0						.addr Boot		; fffc  RESET
+>fffe		00 fe						.addr IRQ		; fffe  IRQ/BRK
 
 ;******  Processing input file: src/system.asm
 
