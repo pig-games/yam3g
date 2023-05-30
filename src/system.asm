@@ -63,6 +63,7 @@ SPI_DATA_REG     = $DD01    ;  SPI Tx and Rx - Wait for BUSY to == 0 before read
 ; FLASH Block 0 - E000-FFFF - MMU Address $0F
 
 .section boot
+Boot
                 ; boot the system
 		#platform.fixCPUPin3
 		clc           		; clear the carry flag

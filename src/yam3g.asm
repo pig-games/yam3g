@@ -15,8 +15,6 @@ yam3g       .namespace
 TileMapXSize = 21
 TileMapYSize = 15
 
-musicPlay = Music + 3
-
 ; Located in High Memory since Vicky can Reference them directly.
 
 .section tilelayer0
@@ -183,7 +181,7 @@ InterruptHandlerJoystick .block
                 bit interrupt.PENDING_REG0
                 beq done
                 sta interrupt.PENDING_REG0
-                jsr musicPlay
+                jsr music.play
                 lda JoyWait
                 beq +
                 dec JoyWait

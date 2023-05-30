@@ -1,3 +1,14 @@
+;********************************************************************************
+; interrupt.asm
+;
+; Interrupt vectors and routines.
+;
+; date:        2023-05-30
+; created by:  PIG Games (Erik van der Tier)
+; license:     MIT
+;********************************************************************************
+
+.cpu cpu_type
 
 .section	irq
 IRQ
@@ -38,7 +49,7 @@ UnusedInt
 		.addr 0			; fff6  Not used on 6502
 		.addr UnusedInt		; fff8  816 emulation ABORT
 		.addr UnusedInt		; fffa  NMI
-		.addr Boot		; fffc  RESET
+		.addr system.Boot	; fffc  RESET
 		.addr IRQ		; fffe  IRQ/BRK
 .send
 

@@ -5,18 +5,18 @@
 ; *******************************************************************************************
 
 * = $02			; reserved
-DP		.dsection dp
+		.dsection dp
 		.cerror * > $00fb, "Out of DP space"
 
 * = $100		; Stack
-Stack		.dsection stack
+		.dsection stack
 		.fill $100
 
 * = $1000
-Music		.dsection music
+		.dsection music
 
 * = $E000
-Boot 		.dsection boot
+ 		.dsection boot
 		.dsection init
 		.dsection system
 		.dsection audio
@@ -60,8 +60,3 @@ SpriteData =    $011500
 TileSet0Data =  $012500
 * = TileSet0Data
 		.dsection tilesetdata
-
-
-.section	music
-	.binary "../music/odeto64.bin"
-.send
