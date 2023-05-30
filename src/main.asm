@@ -13,10 +13,10 @@ Stack		.dsection stack
 		.fill $100
 
 * = $1000
-Music	.dsection music
+Music		.dsection music
 
 * = $E000
-Boot 	.dsection boot
+Boot 		.dsection boot
 		.dsection init
 		.dsection system
 		.dsection audio

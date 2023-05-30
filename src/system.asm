@@ -64,6 +64,7 @@ SPI_DATA_REG     = $DD01    ;  SPI Tx and Rx - Wait for BUSY to == 0 before read
 
 .section boot
                 ; boot the system
+		#platform.fixCPUPin3
 		clc           		; clear the carry flag
 	        sei			; No Interrupt now baby
 		ldx #$FF 		; Let's push that stack pointer right up there
@@ -110,6 +111,7 @@ SPI_DATA_REG     = $DD01    ;  SPI Tx and Rx - Wait for BUSY to == 0 before read
 .send
 
 .section system
+
 editMMU	.macro
 		lda #$80
 		sta $00
