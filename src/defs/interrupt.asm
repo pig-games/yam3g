@@ -47,4 +47,4 @@ interrupt        .namespace
         JR2_INT05_RSVD2      = $20  ;Reserved
         JR2_INT06_RSVD3      = $40  ;Reserved
         JR2_INT07_RSVD4      = $80  ;Reserved
-.endn ; end namespace interrupt
+.endnamespace ; interrupt

@@ -15,8 +15,8 @@ music .namespace
 init = SIDTune
 play = SIDTune + 3
 
-.section	music
+.section music
 SIDTune	.binary "../music/odeto64.bin"
-.send
+.endsection music
 
 .endnamespace ; music

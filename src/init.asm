@@ -50,5 +50,5 @@ init		.namespace
                 sta interrupt.MASK_REG0
 DONE	        bra DONE
 
-.send ; end section init
-.endn ; end namespace init
+.endsection init
+.endnamespace ; init

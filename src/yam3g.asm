@@ -18,28 +18,45 @@ TileMapYSize = 15
 ; Located in High Memory since Vicky can Reference them directly.
 
 .section tilelayer0
-        .include "../tile_data/layer1.txm"
-.send
+
+        TileMapLayer0 = d_tilelayer0
+               .include "../tile_data/layer1.txm"
+
+.endsection tilelayer0
 
 .section tilelayer1
-        .include "../tile_data/layer2.txm"
-.send
+
+        TileMapLayer1 = d_tilelayer1
+                .include "../tile_data/layer2.txm"
+
+.endsection tilelayer1
 
 .section tilelayer2
-         .include "../tile_data/layer3.txm"
-.send
+
+        TileMapLayer2 = d_tilelayer2
+                .include "../tile_data/layer3.txm"
+
+.endsection tilelayer2
 
 .section tilesetdata
-          .binary "../tile_data/tileset.bin"
-.send
+
+        TileSet0Data = d_tilesetdata
+                .binary "../tile_data/tileset.bin"
+
+.endsection tilesetdata
 
 .section spritedata
-          .binary "../tile_data/cursor.bin"
-.send
+
+        SpriteData = d_spritedata
+                .binary "../tile_data/cursor.bin"
+
+.endsection spritedata
 
 .section tilesetpalette
-        TileMapPalette	     .binary "../tile_data/tileset.pal.bin"
-.send
+
+        TileMapPalette        .binary "../tile_data/tileset.pal.bin"
+
+.endsection tilesetpalette
 
 ; Start of actual yam3g code
 
@@ -59,9 +76,9 @@ TileMapYSize = 15
         Temp2           .byte 0
         Temp3           .byte 0
         Temp4           .byte 0
-.send
+.endsection dp
 
-.section        yam3g
+.section yam3g
 
 start
                 jsr system.setIOPage0
@@ -253,5 +270,5 @@ joyUp
 
 .bend        ; end block 
 
-.send        ; end section yam3g
-.endn        ; end namespace yam3g
+.endsection yam3g
+.endnamespace ; yam3g

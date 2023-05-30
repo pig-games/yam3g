@@ -33,12 +33,12 @@ Temp             = Temp0
         .align $100
 	PlayField               .fill 64,0
 	PlayFieldEnd            .addr ?
-.endsection
+.endsection data
 
 .section dp
 	TileAddr                .word 1
-	Addr           .word 1
-.endsection
+	Addr                    .word 1
+.endsection dp
 
 .section yam3g
 
@@ -554,6 +554,6 @@ displayScore .proc
         rts
 .endproc
 
-.endsection 	; yam3g
+.endsection yam3g
 .endnamespace 	; playfield
 .endnamespace	; yam3g

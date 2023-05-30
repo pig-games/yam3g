@@ -23,7 +23,7 @@ REG_L	                = $D000
         SHOW_BG_INOVERLAY       = $10   ; 1 = Allow the Background color to show up in Overlay mode
         FONT_BANK_SET           = $20  ; 0 =(default) FONT Set 0, 1 = FONT Set 1
         
-.endn ; end namespace mctrl
+.endnamespace ; mctrl
 
 sysctrl        .namespace
         LFSR_DATA_LO     = $D6A4
@@ -37,7 +37,7 @@ sysctrl        .namespace
 layer           .namespace
         CTRL_REG0                = $D002
         CTRL_REG1                = $D003
-.endn ; end namespace layer
+.endnamespace ; layer
  
 border          .namespace
         CTRL_REG         = $D004 ; Bit[0] - Enable (1 by default)  Bit[4..6]: X Scroll Offset ( Will scroll Left) (Acceptable Value: 0..7)
@@ -47,7 +47,7 @@ border          .namespace
         COLOR_R          = $D007
         X_SIZE           = $D008; X-  Values: 0 - 32 (Default: 32)
         Y_SIZE           = $D009; Y- Values 0 -32 (Default: 32)
-.endn ; end namespace border
+.endnamespace ; border
 
 ; Reserved - TBD
 
@@ -74,7 +74,7 @@ cursor        .namespace
         TXT_X_REG_H  = $D015
         TXT_Y_REG_L  = $D016
         TXT_Y_REG_H  = $D017
-.endn ; end namespace cursor
+.endnamespace ; cursor
 
 ; Line Interrupt 
 line_irq        .namespace
@@ -85,7 +85,7 @@ line_irq        .namespace
         PIXEL_X_POS_HI     = $D019 ; Or what pixel is being displayed when the register is read
         Y_POS_LO      = $D01A ; This is the Line Value of the Raster
         Y_POS_HI      = $D01B ; 
-.endn ; end namespace line_irq
+.endnamespace ;line_irq
 
 ; Bitmap
         bitmap        .namespace
@@ -114,7 +114,7 @@ line_irq        .namespace
         BM2_START_ADDY_L   = $D111
         BM2_START_ADDY_M   = $D112
         BM2_START_ADDY_H   = $D113
-.endn ; end namespace bitmap
+.endnamespace ; bitmap
 
 ; Tile Map 
 tile        .namespace
@@ -186,7 +186,7 @@ tile        .namespace
         GRP_ADDY5      = $D294
         GRP_ADDY6      = $D298
         GRP_ADDY7      = $D29C
-.endn ; end namespace tile
+.endnamespace ; tile
 
 xymath        .namespace
         XYMATH_CTRL_REG     = $D300 ; Reserved
@@ -203,7 +203,7 @@ xymath        .namespace
         XYMATH_ABS_ADDY_L   = $D30B ; Low Absolute Results
         XYMATH_ABS_ADDY_M   = $D30C ; Mid Absolute Results
         XYMATH_ABS_ADDY_H   = $D30D ; Hi Absolute Results
-.endn ; end namespace xymath
+.endnamespace ; xymath
 
 ; Sprite Block0
 sprite        .namespace
@@ -265,7 +265,7 @@ sprite        .namespace
         SP4_X_H            = $D925 
         SP4_Y_L            = $D926  ; In the Jr, only the L is used (200 & 240)
         SP4_Y_H            = $D927  ; Always Keep @ Zero '0' because in Vicky the value is still considered a 16bits value
-.endn ; end namespace sprite
+.endnamespace ; sprite
 
 ; PAGE 1
 LUT0              = $D000 ; -$D000 - $D3FF
@@ -322,6 +322,6 @@ dma        .namespace
         DMA_RESERVED_6      = $DF15
         DMA_RESERVED_7      = $DF16
         DMA_RESERVED_8      = $DF17
-.endn ; end namespace dma
+.endnamespace ; dma
 
-.endn ; end namespace vky
+.endnamespace ; vky

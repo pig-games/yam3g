@@ -1,9 +1,9 @@
-TileMapLayer2	= $011000
-TileMapLayer0	= $010000
-TileMapLayer1	= $010500
-TileSet0Data	= $012500
+d_tilesetdata	= $012500
+d_spritedata	= $011500
 EXIT_IRQ_HANDLE	= $fe0b
+d_tilelayer2	= $011000
 IRQ		= $fe00
+d_tilelayer0	= $010000
+d_tilelayer1	= $010500
 UnusedInt	= $ff00
 cpu_type	= "w65c02"
-SpriteData	= $011500

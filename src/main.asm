@@ -41,22 +41,25 @@
 * = $FFF4
 		.dsection ivecC02
 
-TileMapLayer0 = $010000
-* = TileMapLayer0
+; The d_<...> labels below are a workaround to use long addresses in this memory layout.
+; This are not the labels used in the rest of the code as those are defined in the yam3g namespace where they belong.
+
+d_tilelayer0 = $010000
+* = d_tilelayer0
 		.dsection tilelayer0
 
-TileMapLayer1 = $010500
-* = TileMapLayer1
+d_tilelayer1 = $010500
+* = d_tilelayer1
 		.dsection tilelayer1
 
-TileMapLayer2 = $011000
-* = TileMapLayer2
+d_tilelayer2 = $011000
+* = d_tilelayer2
 		.dsection tilelayer2
 
-SpriteData =    $011500
-* = SpriteData
+d_spritedata = $011500
+* = d_spritedata
 		.dsection spritedata
 
-TileSet0Data =  $012500
-* = TileSet0Data
+d_tilesetdata = $012500
+* = d_tilesetdata
 		.dsection tilesetdata

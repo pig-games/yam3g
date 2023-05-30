@@ -13,5 +13,5 @@ joy		.namespace
 	VIA0_DRB        = $DC02 
 	VIA0_DRA        = $DC03 
 
-.endn ; end joy namesvky.pace
-.endn ; end io namespace
+.endnamespace ; joy
+.endnamespace ; io

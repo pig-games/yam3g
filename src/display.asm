@@ -1,7 +1,7 @@
 .cpu cpu_type
 
 display		.namespace		
-.section 	display
+.section display
 
 tinyVkyInit
             	stz vky.mctrl.REG_L
@@ -98,7 +98,7 @@ endSplash
                 rts
 .bend ; end splashText
 
-.send ; end section display
+.endsection display
 
 ;******************************************************************************************
 ; Display data that sits in CPU memory range.
@@ -152,6 +152,7 @@ FailedSDC       .text "THE SDCARD FAILED", $00
 SuccessSDC      .text "THE SDCARD INIT... SUCCESS", $00
 Format          .text "N:C256JR,S", $00, "A"
 HEX             .text "0123456789", $01, $02, $03, $04, $05, $00
-.send ; end section data
 
-.endn ; end namespace display
+.endsection data
+
+.endnamespace ; display

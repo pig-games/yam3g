@@ -3,7 +3,7 @@ rnd	.namespace
 
 .section dp
 seed	.byte 4
-.send
+.endsection dp
 
 .section yam3g
 
@@ -72,5 +72,5 @@ generateGalois24o .proc
 .endproc
 
 
-.send ; end section yam3g
-.endn ; end namespace rnd
+.endsection yam3g
+.endnamespace ; rnd

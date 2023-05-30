@@ -1,7 +1,7 @@
 
 ; 64tass Turbo Assembler Macro V1.58.2974? listing file
 ; 64tass --long-branch --long-address -b -fc -Wshadow -Wcase-symbol -D "cpu_type=\"w65c02\"" -o build/YAM3G.bin --list build/YAM3G.lst --labels=build/YAM3G.lbl src/main.asm src/init.asm src/interrupt.asm src/system.asm src/yam3g.asm src/playfield.asm src/cursor.asm src/music.asm src/rnd.asm src/audio.asm src/defs/interrupt.asm src/defs/tinyvicky.asm src/defs/platform.asm src/defs/io.asm
-; Tue May 30 09:59:00 2023
+; Tue May 30 21:02:59 2023
 
 ;Offset	;PC	;Hex		;Monitor	;Source
 
@@ -12,11 +12,11 @@
 ;******  Processing input file: src/main.asm
 
 >0100								.fill $100
-=$010000					TileMapLayer0 = $010000
-=$010500					TileMapLayer1 = $010500
-=$011000					TileMapLayer2 = $011000
-=$011500					SpriteData =    $011500
-=$012500					TileSet0Data =  $012500
+=$010000					d_tilelayer0 = $010000
+=$010500					d_tilelayer1 = $010500
+=$011000					d_tilelayer2 = $011000
+=$011500					d_spritedata = $011500
+=$012500					d_tilesetdata = $012500
 
 ;******  Processing input file: src/init.asm
 
@@ -180,6 +180,7 @@
 
 =21						TileMapXSize = 21
 =15						TileMapYSize = 15
+=$010000					        TileMapLayer0 = d_tilelayer0
 
 ;******  Processing file: src/../tile_data/layer1.txm
 
@@ -252,6 +253,7 @@
 
 ;******  Return to file: src/yam3g.asm
 
+=$010500					        TileMapLayer1 = d_tilelayer1
 
 ;******  Processing file: src/../tile_data/layer2.txm
 
@@ -320,6 +322,7 @@
 
 ;******  Return to file: src/yam3g.asm
 
+=$011000					        TileMapLayer2 = d_tilelayer2
 
 ;******  Processing file: src/../tile_data/layer3.txm
 
@@ -388,7 +391,8 @@
 
 ;******  Return to file: src/yam3g.asm
 
->012500	2500	00 00 00 00 00 00 00 00		          .binary "../tile_data/tileset.bin"
+=$012500					        TileSet0Data = d_tilesetdata
+>012500	2500	00 00 00 00 00 00 00 00		                .binary "../tile_data/tileset.bin"
 >012508	2508	00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 >012518	2518	01 00 00 00 00 00 00 00 00 00 00 00 00 00 01 01
 >012528	2528	00 01 01 00 00 00 00 00 00 00 00 00 00 00 01 01
@@ -3814,7 +3818,8 @@
 >02d428	d428	00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 ;		...repeated 3084 times (49344 bytes)...
 >0394f8	94f8	00 00 00 00 00 00 00 00
->011500	1500	0a 0a 0a 03 00 00 00 00		          .binary "../tile_data/cursor.bin"
+=$011500					        SpriteData = d_spritedata
+>011500	1500	0a 0a 0a 03 00 00 00 00		                .binary "../tile_data/cursor.bin"
 >011508	1508	00 00 00 03 0a 0a 0a 00 0a 00 00 00 00 00 00 00
 >011518	1518	00 00 00 00 00 00 0a 00 0a 00 00 00 00 00 00 00
 >011528	1528	00 00 00 00 00 00 0a 00 03 00 00 00 00 00 00 00
@@ -3827,7 +3832,7 @@
 >0115d8	15d8	00 00 00 00 00 00 0a 00 0a 0a 0a 03 00 00 00 00
 >0115e8	15e8	00 00 00 03 0a 0a 0a 00 00 00 00 00 00 00 00 00
 >0115f8	15f8	00 00 00 00 00 00 00 00
->ee00		00 00 00 ff 29 20 20 ff		        TileMapPalette	     .binary "../tile_data/tileset.pal.bin"
+>ee00		00 00 00 ff 29 20 20 ff		        TileMapPalette        .binary "../tile_data/tileset.pal.bin"
 >ee08		bd 8d 31 ff 7b 50 39 ff b4 85 31 ff ac 79 39 ff
 >ee18		a4 75 39 ff 8b 61 39 ff 83 55 39 ff 6a 44 5a ff
 >ee28		ff ff ff ff 94 34 83 ff d8 00 cc ff dd 1f d3 ff
@@ -4056,7 +4061,7 @@
 >e838		00 00 00 00 00 00 00 00
 >e840							PlayFieldEnd            .addr ?
 >0011		01 00					TileAddr                .word 1
->0013		01 00					Addr           .word 1
+>0013		01 00					Addr                    .word 1
 .f158						resetScore
 .f158		64 08		stz $08		                stz Score0
 .f15a		64 09		stz $09		                stz Score1

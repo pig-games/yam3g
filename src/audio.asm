@@ -103,5 +103,5 @@ mutePSG .proc
             	sta PSG_INT_R_PORT
             	rts
 .endproc
-.send ; end section audio
-.endn ; end namespace audio
+.endsection audio
+.endnamespace ; audio

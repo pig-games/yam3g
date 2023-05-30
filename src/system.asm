@@ -109,7 +109,7 @@ Boot
                 sta interrupt.PENDING_REG1    
                 lda interrupt.PENDING_REG2
                 sta interrupt.PENDING_REG3                 
-.send
+.endsection boot
 
 .section system
 
@@ -177,5 +177,5 @@ setIOPage3 .proc
 		rts 
 .endproc
 
-.send ; end section system
-.endn ; end namespace system
+.endsection system
+.endnamespace ; system
