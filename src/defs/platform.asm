@@ -52,8 +52,8 @@ fixCPUPin3 .macro
 
       		; Reconfigure CPU pin 3.
         	stz     $1       ; io_ctrl
-        	lda     #$60     ; $40 (DDR), $20 logic 1
-        	sta     $d6a7    ; FIXME: <--- oops, in use on K.  New reg later.
+        	lda     #$03     ; 
+        	sta     $d6b0    ; 
 
       		; Resume
 	+    	.cpu cpu_type      

@@ -31,7 +31,7 @@ MAPS =  tile_data/layer1.txm \
 		tile_data/layer2.txm \
 		tile_data/layer3.txm
 
-LABELS = -D cpu_type=\"w65c02\"
+LABELS = -D cpu_type=\"65816\"
 		
 OPTS = 	--long-branch --long-address -b -fc -Wshadow -Wcase-symbol
 
@@ -40,7 +40,6 @@ $(BLD_NAME): $(SRC) $(BINS) $(MAPS) Makefile
 
 up: 	$(BLD_NAME)
 		upload $(BLD_NAME) $(ADDR)
-
 
 tileset: tile_data/demotiles.png
 		pngtotile tile_data/demotiles.png -b tile_data/tileset.bin -p tile_data/tileset.pal.bin

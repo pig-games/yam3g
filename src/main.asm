@@ -15,30 +15,30 @@
 * = $1000
 		.dsection music
 
-* = $E000
+* = $e000
  		.dsection boot
 		.dsection init
 		.dsection system
 		.dsection audio
 
-* = $E800
+* = $e800
 		.dsection data
 
-* = $EE00
+* = $ee00
 		.dsection tilesetpalette
 
-* = $F000	
+* = $f000	
 		.dsection yam3g
 
-* = $FE00
+* = $fe00
 		.dsection irq
 
-* = $FF00
+* = $ff00
 		.dsection unusedint
 
-* = $FFE4
+* = $ffe4
 		.dsection ivec816
-* = $FFF4
+* = $fff4
 		.dsection ivecC02
 
 ; The d_<...> labels below are a workaround to use long addresses in this memory layout.

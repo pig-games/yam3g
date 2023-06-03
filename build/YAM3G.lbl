@@ -6,4 +6,4 @@ IRQ		= $fe00
 d_tilelayer0	= $010000
 d_tilelayer1	= $010500
 UnusedInt	= $ff00
-cpu_type	= "w65c02"
+cpu_type	= "65816"
