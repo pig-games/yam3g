@@ -14,6 +14,9 @@ yam3g       .namespace
 
 TileMapXSize = 21
 TileMapYSize = 15
+STATE_TITLE  = 00
+STATE_MENU   = 01
+STATE_GAME   = 02
 
 ; Located in High Memory since Vicky can Reference them directly.
 
@@ -61,6 +64,7 @@ TileMapYSize = 15
 ; Start of actual yam3g code
 
 .section dp
+        State           .byte 0
         JoyWait         .byte 0        
         CurPosX         .byte 0
         CurPosY         .byte 0
@@ -184,12 +188,26 @@ setLUT0_4_Tiles2
                 sta vky.tile.T0_CONTROL_REG  ; Enable Layer0
                 sta vky.tile.T1_CONTROL_REG  ; Enable Layer1
                 sta vky.tile.T2_CONTROL_REG  ; Enable Layer2
-                jsr cursor.init
-                jsr playfield.resetScore
-                ; generate random tiles for map 1
-                jsr playfield.generateNew
-                jsr playfield.updateTileMap
+
+                lda #STATE_TITLE
+                jsr changeState
+                
+        rts
+
+changeState .proc
+                sta State
+                bne checkMenu
+                jsr title.init
                 rts
+        checkMenu
+                cmp #STATE_MENU
+                bne checkGame
+                jsr menu.init
+                rts
+        checkGame
+                jsr game.init
+        rts
+.endproc
 
 InterruptHandlerJoystick .block
 
@@ -209,64 +227,32 @@ InterruptHandlerJoystick .block
                 lda io.joy.VIA0_IRB     ; Read VIA Port B to get Joystick Value
                 eor #$FF                ; flip bits
                 and #$7F                ; Remove Unwanted bits
+                sta io.joy.VAL
                 bne process             ; if not zero, there is some joy activity
                 stz JoyWait
         done
                 rts
 
         process
-                sta io.joy.VAL          ; backup for button value checks
-                lsr a                   ; shift Up status into carry
-                bcs joyUp
-                lsr a                   ; shift Down status into carry
-                bcs joyDown
-                lsr a                   ; shift Left status into carry
-                bcs joyLeft
-                lsr a                   ; shift Right status into carry
-                bcs joyRight
+                lda State
+                bne checkMenu
+                pha
+                jsr title.processJoystick
+                pla
+                rts
+        checkMenu
+                cmp #STATE_MENU
+                bne checkGame
+                pha
+                jsr menu.processJoystick
+                pla
+                rts
+        checkGame
+                pha
+                jsr game.processJoystick
+                pla
         end
                 rts 
-
-joyRight
-                lda io.joy.VAL                 ; restore joy value for button checks
-                and io.joy.BUTTON_0_MASK
-                beq +
-                jsr cursor.swapRight        ; if button 0 is pressed attempt a swap
-                bcc end
-                jsr playfield.updateScore
-        +
-                jsr cursor.moveRight
-                bra end
-joyLeft
-                lda io.joy.VAL
-                and io.joy.BUTTON_0_MASK
-                beq +
-                jsr cursor.swapLeft
-                bcc end
-                jsr playfield.updateScore
-        +
-                jsr cursor.moveLeft
-                bra end
-joyDown
-                lda io.joy.VAL
-                and io.joy.BUTTON_0_MASK
-                beq +
-                jsr cursor.swapDown
-                bcc end
-                jsr playfield.updateScore
-        +
-                jsr cursor.moveDown
-                bra end
-joyUp
-                lda io.joy.VAL
-                and io.joy.BUTTON_0_MASK
-                beq +
-                jsr cursor.swapUp
-                bcc end                        ; swap failed we're done
-                jsr playfield.updateScore
-        +
-                jsr cursor.moveUp
-                bra end
 
 .bend        ; end block 
 

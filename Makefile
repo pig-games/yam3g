@@ -15,6 +15,9 @@ SRC = 	src/main.asm \
 		src/system.asm \
 		src/yam3g.asm \
 		src/playfield.asm \
+		src/title.asm \
+		src/menu.asm \
+		src/game.asm \
 		src/cursor.asm \
 		src/music.asm \
 		src/rnd.asm \
@@ -31,7 +34,7 @@ MAPS =  tile_data/layer1.txm \
 		tile_data/layer2.txm \
 		tile_data/layer3.txm
 
-LABELS = -D cpu_type=\"65816\"
+LABELS = -D cpu_type=\"65c02\"
 		
 OPTS = 	--long-branch --long-address -b -fc -Wshadow -Wcase-symbol
 

@@ -1,9 +1,9 @@
-d_tilesetdata	= $012500
-d_spritedata	= $011500
 EXIT_IRQ_HANDLE	= $fe0b
 d_tilelayer2	= $011000
 IRQ		= $fe00
 d_tilelayer0	= $010000
 d_tilelayer1	= $010500
 UnusedInt	= $ff00
-cpu_type	= "65816"
+d_tilesetdata	= $012500
+cpu_type	= "65c02"
+d_spritedata	= $011500
