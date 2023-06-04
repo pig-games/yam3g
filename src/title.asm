@@ -15,12 +15,27 @@ title       .namespace
 
 .section yam3g
 
+;********************************************************************************
+; init
+;
+; Initialise the title state.
+;
+; input:
+; output:
+;********************************************************************************
 init .proc
-		pha
-		pla
 		rts
 .endproc
 
+;********************************************************************************
+; processJoystick
+;
+; Process joystick input.
+;
+; input:
+; * io.joy.VAL: the joystick input value.
+; output:
+;********************************************************************************
 processJoystick .proc
                 lda io.joy.VAL          ; backup for button value checks
                 and io.joy.BUTTON_0_MASK

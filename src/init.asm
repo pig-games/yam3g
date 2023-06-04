@@ -16,7 +16,7 @@ init		.namespace
 		jsr system.setIOPage0		; The Color LUT for the Text Mode is in Page 0
                 jsr audio.initCodec		; Make sure to setup the CODEC Very early
                 jsr audio.mutePSG
-		jsr yam3g.music.init
+		jsr yam3g.music.initSID
                 ; Init Devices      ; Let's Init the Keyboard first
 		jsr system.setIOPage0
                 lda #$00 
@@ -41,7 +41,8 @@ init		.namespace
                 sta vky.layer.CTRL_REG0
                 lda #$06
                 sta vky.layer.CTRL_REG1
-                jsr yam3g.start
+
+                jsr yam3g.initGameLoop
 
                 ; Enable the SOF interrupt
                 cli 

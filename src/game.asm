@@ -16,17 +16,33 @@ game       .namespace
 
 .section yam3g
 
+;********************************************************************************
+; init
+;
+; Initialise the game state.
+; This initialises the Cursor and Playfield.
+;
+; input:
+; output:
+;********************************************************************************
 init .proc
-		pha
                 jsr cursor.init
                 jsr playfield.resetScore
                 ; generate random tiles for map 1
                 jsr playfield.generateNew
                 jsr playfield.updateTileMap
-		pla
 	rts
 .endproc
 
+;********************************************************************************
+; processJoystick
+;
+; Process joystick input.
+;
+; input:
+; * io.joy.VAL: the joystick input value.
+; output:
+;********************************************************************************
 processJoystick .proc
                 lda io.joy.VAL          ; backup for button value checks
                 lsr a                   ; shift Up status into carry

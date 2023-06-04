@@ -14,9 +14,10 @@ yam3g       .namespace
 
 TileMapXSize = 21
 TileMapYSize = 15
+STATE_AMOUNT = 3
 STATE_TITLE  = 00
-STATE_MENU   = 01
-STATE_GAME   = 02
+STATE_MENU   = 02
+STATE_GAME   = 04
 
 ; Located in High Memory since Vicky can Reference them directly.
 
@@ -84,8 +85,18 @@ STATE_GAME   = 02
 
 .section yam3g
 
-start
-                jsr system.setIOPage0
+        JoyJmpTable     .fill STATE_AMOUNT*2
+
+;********************************************************************************
+; initGameLoop
+;
+; Initialises the game loop.
+;
+; input:
+; output:
+;********************************************************************************
+initGameLoop
+        	jsr system.setIOPage0
 
                 stz io.joy.VIA0_DRB    ; Make Sure the VIA is in Read Mode for the Joystick 
                 stz io.joy.VIA0_DRA    ; Make Sure the VIA is in Read Mode for the Joystick
@@ -189,34 +200,92 @@ setLUT0_4_Tiles2
                 sta vky.tile.T1_CONTROL_REG  ; Enable Layer1
                 sta vky.tile.T2_CONTROL_REG  ; Enable Layer2
 
+               	jsr music.init
+                jsr initJoyJmpTable
+
                 lda #STATE_TITLE
                 jsr changeState
-                
         rts
 
+;********************************************************************************
+; changeState
+;
+; Changes the game state by setting the dp State 'variable'.
+; This also calls the init routine of the new state.
+;
+; input:
+; * A: the new state to set the game to.
+; output:
+;********************************************************************************
 changeState .proc
-                sta State
-                bne checkMenu
-                jsr title.init
+                sta State                ; store new state id
+                bne checkMenu            ; is the new state not the Title state (0)
+                jsr title.init           ; if so we init the title state
                 rts
-        checkMenu
+        checkMenu                        ; we check if the new state is Menu
                 cmp #STATE_MENU
-                bne checkGame
-                jsr menu.init
+                bne checkGame            ; if not menu, check for game state
+                jsr menu.init            ; if menu, call init
                 rts
         checkGame
                 jsr game.init
         rts
 .endproc
 
-InterruptHandlerJoystick .block
+;********************************************************************************
+; initJoyJmpTable
+;
+; Initialise the JoyJmpTable with pointers to state specific processJoystick routines.
+;
+; input:
+; output:
+;********************************************************************************
+initJoyJmpTable .proc
+                lda #<title.processJoystick
+                sta JoyJmpTable + STATE_TITLE
+                lda #>title.processJoystick
+                sta JoyJmpTable + STATE_TITLE+1
+                lda #<menu.processJoystick
+                sta JoyJmpTable + STATE_MENU
+                lda #>menu.processJoystick
+                sta JoyJmpTable + STATE_MENU+1
+                lda #<game.processJoystick
+                sta JoyJmpTable + STATE_GAME
+                lda #>game.processJoystick
+                sta JoyJmpTable + STATE_GAME+1
+        rts
+.endproc ; initJoyJmpTable
+
+;********************************************************************************
+; processJoystick
+;
+; processJoystick logic for the current state.
+;
+; input:
+; * State: the dp State 'var' that contains the current state
+; output:
+;********************************************************************************
+processJoystick .proc
+                ldx State
+                jmp (JoyJmpTable,x)
+.endproc
+
+;********************************************************************************
+; SOFInterruptHandler
+;
+; The SOF interupt handler.
+;
+;********************************************************************************
+SOFInterruptHandler .proc
 
                 ; Clear Interrupt Pending Register for SOF
                 lda #interrupt.JR0_INT00_SOF
                 bit interrupt.PENDING_REG0
                 beq done
                 sta interrupt.PENDING_REG0
+
                 jsr music.play
+
                 lda JoyWait
                 beq +
                 dec JoyWait
@@ -228,33 +297,14 @@ InterruptHandlerJoystick .block
                 eor #$FF                ; flip bits
                 and #$7F                ; Remove Unwanted bits
                 sta io.joy.VAL
-                bne process             ; if not zero, there is some joy activity
+                beq noJoy               ; if zero, there is no joy activity
+                jsr processJoystick
+                rts
+        noJoy
                 stz JoyWait
         done
                 rts
-
-        process
-                lda State
-                bne checkMenu
-                pha
-                jsr title.processJoystick
-                pla
-                rts
-        checkMenu
-                cmp #STATE_MENU
-                bne checkGame
-                pha
-                jsr menu.processJoystick
-                pla
-                rts
-        checkGame
-                pha
-                jsr game.processJoystick
-                pla
-        end
-                rts 
-
-.bend        ; end block 
+.endproc ; SOFInterruptHandler
 
 .endsection yam3g
 .endnamespace ; yam3g

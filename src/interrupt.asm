@@ -17,7 +17,7 @@ IRQ
                 phy
                 php
 
-                jsr yam3g.InterruptHandlerJoystick
+                jsr yam3g.SOFInterruptHandler
 
                 plp 
                 ply
