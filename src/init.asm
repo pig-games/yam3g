@@ -16,7 +16,9 @@ init		.namespace
 		jsr system.setIOPage0		; The Color LUT for the Text Mode is in Page 0
                 jsr audio.initCodec		; Make sure to setup the CODEC Very early
                 jsr audio.mutePSG
-		jsr yam3g.music.initSID
+		jsr yam3g.music.init
+		; lda #1
+  ;               jsr yam3g.music.InitSIDAddr
                 ; Init Devices      ; Let's Init the Keyboard first
 		jsr system.setIOPage0
                 lda #$00 

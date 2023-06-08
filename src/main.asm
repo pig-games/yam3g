@@ -12,7 +12,7 @@
 		.dsection stack
 		.fill $100
 
-* = $1000
+* = $1000-$7e
 		.dsection music
 
 * = $e000
