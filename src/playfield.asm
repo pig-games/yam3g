@@ -29,15 +29,30 @@ OFF_GEM_RIGHT    = 1
 OFF_GEM_BELOW    = 8
 Temp             = Temp0
 
+; describes the vertical range of matched gem for a specific column
+Column .struct
+        low        .byte 0
+        high       .byte 0
+.endstruct
+
 .section data
         .align $100
-	PlayField               .fill 64,0
-	PlayFieldEnd            .addr ?
+	PlayField     .fill 64,0
+	PlayFieldEnd  .addr ?
 .endsection data
 
 .section dp
-	TileAddr                .word 1
-	Addr                    .word 1
+	TileAddr     .word 1
+	Addr         .word 1
+        ColPtr       .word 1
+        Col0         .dstruct Column
+        Col1         .dstruct Column
+        Col2         .dstruct Column
+        Col3         .dstruct Column
+        Col4         .dstruct Column
+        Col5         .dstruct Column
+        Col6         .dstruct Column
+        Col7         .dstruct Column
 .endsection dp
 
 .section yam3g
@@ -153,7 +168,6 @@ checkMatches .proc
                 stz VerMatchAmount
                 lda Addr
                 sta BackupPFA
-
         ; check if target gem is the same as the current, if so we're done
                 lda CurrentGem
                 and #7
@@ -183,6 +197,7 @@ checkMatches .proc
                 and #HORIZONTAL_MATCH
                 beq checkRight
                 inc HorMatchAmount
+                ;here we know we've already got a full match and we should set the low and high for both left columns
         checkRight
                 lda BackupPFA                ; restore original playfield address
                 sta Addr
@@ -403,16 +418,16 @@ checkHorizontalMatch .proc
                 txa
                 and #$7                           ; check if our counter (x) is a multiple of 8 so right most
                 beq noMatch                       ; we still want to check for a vertical match below
-                lda (Addr)               ; restore gem number and check for match with gem to the right
+                lda (Addr)                        ; restore gem number and check for match with gem to the right
                 ldy #OFF_GEM_RIGHT
                 eor (Addr),y
                 and #7
-                bne noMatch                       ; no horizontal match so we check vertical
+                bne noMatch                       ; no horizontal match
                 ; check for match amount for gem to the right
                 lda #HORIZONTAL_MATCH             ; bit indicating horizontal match between two gems
                 ora Temp
                 sta Temp                          ; add match bit to Temp, so we can use that later to check for matches
-                and (Addr),y             ; set z if our neighbour already was a match, else this is the first match
+                and (Addr),y                      ; set z if our neighbour already was a match, else this is the first match
                 clc                               ; clear c to indicate a match
                 rts
 noMatch

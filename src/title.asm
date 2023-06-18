@@ -24,7 +24,7 @@ title       .namespace
 ; output:
 ;********************************************************************************
 init .proc
-		lda #1
+		lda #0
                 jsr yam3g.music.InitSIDAddr
 		rts
 .endproc

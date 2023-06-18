@@ -36,7 +36,7 @@ MAPS =  tile_data/layer1.txm \
 
 LABELS = -D cpu_type=\"65c02\"
 		
-OPTS = 	--long-branch --long-address -b -fc -Wshadow -Wcase-symbol
+OPTS = 	--long-branch --long-address -b -fc -Wshadow -Wcase-symbol #--intel-hex
 
 $(BLD_NAME): $(SRC) $(BINS) $(MAPS) Makefile
 		64tass $(OPTS) $(LABELS) $(SRC) -o $@ --list $(basename $@).lst --labels=$(basename $@).lbl

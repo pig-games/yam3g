@@ -28,8 +28,6 @@ game       .namespace
 init .proc
 		lda #2
                 jsr yam3g.music.InitSIDAddr
-		; lda #1
-		; jsr yam3g.music.init
                 jsr cursor.init
                 jsr playfield.resetScore
                 ; generate random tiles for map 1

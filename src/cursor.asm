@@ -187,6 +187,12 @@ swapLeft .proc
                 stz Temp4
                 stz HorizontalMatchTotal
                 stz VerticalMatchTotal
+                lda CurPosX
+                dec a                       ; CurPosX - 1
+                asl                         ; (CurPosX-1) * 2
+                clc
+                adc playfield.Col0          ; Calculate address of column struct
+                sta playfield.ColPtr        ; Store ColPtr
                 #loadXY CurPosX, CurPosY
                 jsr playfield.setAddr
 		pha			    ; backup low byte of source address
@@ -201,6 +207,11 @@ swapLeft .proc
                 inc Temp4
                 jsr updateTotalMatches
         +
+                lda CurPosX
+                asl                         ; CurPosX * 2
+                clc
+                adc playfield.Col0          ; Calculate address of column struct
+                sta playfield.ColPtr        ; Store ColPtr
 		pla			    ; restore low byte of target address
 		sta playfield.Addr
                 lda (playfield.Addr)	    ; get gem number

@@ -57,8 +57,7 @@ playGame .proc
 .endsection yam3g
 
 .section music
-        ; SIDTune	.binary "../music/odeto64.bin"
-        SIDTune	.binary "../music/Bejewled3CLone.sid"
+        SIDTune	.binary "../music/Bejewled3CLone6581.sid"
         MusicJmpTable   .fill STATE_AMOUNT*2
 .endsection music
 
