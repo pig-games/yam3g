@@ -163,9 +163,18 @@ checkMatches .proc
         HorMatchAmount   = Temp1
         VerMatchAmount   = Temp2
         CurrentGem       = Temp3
+                lda #$FF
+                sta vky.BACKGROUND_COLOR_G
                 sty CurrentGem
                 stz HorMatchAmount
                 stz VerMatchAmount
+                ; setup ColPtr
+                lda #<Col0
+                clc
+                adc CurPosX
+                sta ColPtr
+                stz ColPtr+1
+                ; backup Addr
                 lda Addr
                 sta BackupPFA
         ; check if target gem is the same as the current, if so we're done
@@ -176,6 +185,7 @@ checkMatches .proc
                 bne checkLeft
                 ldx #0
                 ldy #0
+                stz vky.BACKGROUND_COLOR_G
                 clc
                 rts
         checkLeft
@@ -184,7 +194,7 @@ checkMatches .proc
                 beq checkRight
                 
                 lda CurPosX
-                beq checkRight
+                beq checkRight        ; if CurPosX == 0 we don't check left.
                 dec Addr        ; move playfield addr to the left
 
                 lda CurrentGem
@@ -198,8 +208,19 @@ checkMatches .proc
                 beq checkRight
                 inc HorMatchAmount
                 ;here we know we've already got a full match and we should set the low and high for both left columns
+                lda ColPtr
+                pha
+                sec
+                sbc #4
+                sta ColPtr
+                lda CurPosY
+                ldy #1
+                sta (ColPtr)         ; store CurPoxY in low for column CurPosX - 2
+                sta (ColPtr),y       ; store CurPosY in high for column CurPosX - 2
+                pla
+                sta ColPtr           ; restore ColPtr
         checkRight
-                lda BackupPFA                ; restore original playfield address
+                lda BackupPFA        ; restore original playfield address
                 sta Addr
 
                 txa
@@ -211,14 +232,43 @@ checkMatches .proc
                 beq checkAbove        ; if so we still need to check for vertical match
                 lda CurrentGem
                 and #7
-                ldy #1
+                ldy #1                ; used for match check and possibly setting low high on match
                 eor (Addr),y
                 and #7
                 bne checkAbove        ; we didn't find a horizontal match try vertical
+                lda HorMatchAmount
+                beq noFullMatchYet    ; if HorMatchAmount == 0 we don't set low and high for column yet                
+                ; we have a match so we need to set column to left and column to the right
+                lda ColPtr
+                pha                   ; backup ColPtr
+                dec ColPtr            ; move ColPtr to column CurPosX - 1
+                dec ColPtr            ; ...
+                lda CurPosY
+                sta (ColPtr)          ; store CurPosY in low for column CurPosX - 1
+                sta (ColPtr),y        ; store CurPosY in high for column CurPosX - 1 (y is already #1)
+                iny                   ; increase Y to column CurPosX low
+                iny                   ;            to column CurPosX high
+                iny                   ;            to column CurPosX + 1 low
+                sta (ColPtr),y        ; store CurPosY in low for column CurPosX + 1
+                iny                   ;            to column CurPosX + 1 high
+                sta (ColPtr),y        ; store CurPosY in high for column CurPosX + 1
+                ldy #1                ; restore Y to 1
+                pla                   ; restore ColPtr
+                sta ColPtr
+        noFullMatchYet
                 inc HorMatchAmount
                 lda (Addr),y
                 and #HORIZONTAL_MATCH
                 beq checkAbove
+                lda ColPtr
+                pha
+                inc ColPtr
+                inc ColPtr
+                lda CurPosY
+                sta (ColPtr)
+                sta (ColPtr),y
+                pla
+                sta ColPtr
                 inc HorMatchAmount
         checkAbove
                 lda BackupPFA                ; restore original playfield address
@@ -272,9 +322,21 @@ checkMatches .proc
                 cpy #2
                 blt notFound
         found
+                ; set low-high for column CurPosx
+                cpy #2
+                blt +
+                lda CurPosX
+                phy
+                ldy #1
+                sta (ColPtr)
+                sta (ColPtr),y
+                ply
+        +
+                stz vky.BACKGROUND_COLOR_G
                 sec
                 rts
         notFound
+                stz vky.BACKGROUND_COLOR_G
                 clc
                 rts
 .endproc
